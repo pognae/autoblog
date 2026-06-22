@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.log
+
+# 로컬 데이터 (글, DB, 브라우저 세션)
+server/data/
+server/.session/
+server/screenshots/
+
+# 환경변수
+.env
+.env.*
+!.env.example
