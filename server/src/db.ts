@@ -56,6 +56,10 @@ export async function initDb(): Promise<void> {
   }
   delete (migrated as Record<string, unknown>).apiKey;
   delete (migrated as Record<string, unknown>).model;
+  // 레거시 기본값(gemini-2.0-flash, 무료 등급 limit:0 빈발)을 사용 가능한 2.5-flash 로 보정
+  if (migrated.gemini.model === "gemini-2.0-flash") {
+    migrated.gemini.model = DEFAULT_AUTOPILOT.gemini.model;
+  }
   db.data.autopilot = migrated;
 
   if (db.data.keywordPlan === undefined) db.data.keywordPlan = null;

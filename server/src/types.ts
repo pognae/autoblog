@@ -134,7 +134,8 @@ export const DEFAULT_AUTOPILOT: AutopilotConfig = {
   minute: 0,
   visibility: "public",
   openai: { apiKey: "", model: "gpt-4o-mini", baseUrl: "" },
-  gemini: { apiKey: "", model: "gemini-2.0-flash" },
+  // gemini-2.0-flash 는 무료 등급 한도가 0(limit:0)인 경우가 많아 2.5-flash 를 기본값으로 둔다.
+  gemini: { apiKey: "", model: "gemini-2.5-flash" },
 };
 
 export const DEFAULT_AI_PROVIDER_STATE: AiProviderState = {

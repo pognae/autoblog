@@ -149,6 +149,23 @@ export default function AutopilotPage() {
         자동으로 사용하며, 한쪽이 실패하면 다른 쪽으로 전환합니다.
       </p>
 
+      {/* 수동 실행: 예약 시각과 무관하게 지금 바로 글 생성→발행 */}
+      <section className="flex flex-col gap-3 rounded-xl border border-emerald-700/40 bg-emerald-500/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="font-medium text-emerald-200">지금 즉시 발행</h3>
+          <p className="mt-1 text-sm text-slate-400">
+            예약 시각과 상관없이, 버튼을 누르면 바로 글 <b>{cfg.postsPerDay}개</b>를 생성해 발행합니다.
+          </p>
+        </div>
+        <button
+          disabled={busy === "run"}
+          onClick={runNow}
+          className="shrink-0 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+        >
+          {busy === "run" ? "발행 중..." : "지금 즉시 발행"}
+        </button>
+      </section>
+
       {/* AI 상태 / 사용량 */}
       <section className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/50 p-5">
         <div className="flex items-center justify-between">

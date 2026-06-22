@@ -160,14 +160,19 @@ export async function runNow(): Promise<string> {
   }
 }
 
-/** 매 분 호출되어, 지정 시각이면 하루치 작업을 수행한다. */
+/** 매 분 호출되어, 예약 시각이 지났고 오늘 아직 실행하지 않았으면 하루치 작업을 수행한다. */
 async function tick(): Promise<void> {
   const cfg = db.data.autopilot;
   if (!cfg.enabled || running) return;
 
   const { dateStr, hour, minute } = seoulParts();
-  if (hour !== cfg.hour || minute !== cfg.minute) return;
   if (cfg.lastRunDate === dateStr) return; // 오늘 이미 실행됨
+
+  // 정각(===)이 아니라 "예약 시각 경과(>=)" 로 판정한다.
+  // 그래야 그 1분에 서버가 꺼져 있었거나 tick 이 밀려도, 켜진 뒤 그날 안에 따라잡아 실행된다.
+  const nowMinutes = hour * 60 + minute;
+  const scheduledMinutes = cfg.hour * 60 + cfg.minute;
+  if (nowMinutes < scheduledMinutes) return; // 아직 예약 시각 전
 
   running = true;
   // 중복 실행 방지를 위해 즉시 날짜 기록

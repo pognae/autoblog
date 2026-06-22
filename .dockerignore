@@ -1,0 +1,19 @@
+node_modules
+**/node_modules
+dist
+**/dist
+*.log
+
+# 로컬 데이터/세션/스크린샷은 이미지에 넣지 않는다 (런타임 볼륨/세션 가져오기로 처리)
+server/data
+server/.session
+server/screenshots
+
+# 환경변수 파일은 이미지에 굽지 않는다 (배포 플랫폼의 환경변수로 주입)
+.env
+**/.env
+!**/.env.example
+
+.git
+.gitignore
+*.md

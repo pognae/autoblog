@@ -30,6 +30,8 @@ export const config = {
     state: path.join(SERVER_ROOT, ".session", "state.json"),
     /** 실패 시 디버깅용 스크린샷 */
     screenshots: path.join(SERVER_ROOT, "screenshots"),
+    /** 빌드된 프론트엔드(web/dist). 프로덕션에서 서버가 같이 서빙한다. */
+    webDist: path.resolve(SERVER_ROOT, "..", "web", "dist"),
   },
 
   scheduler: {

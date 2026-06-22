@@ -169,6 +169,33 @@ export const api = {
     }),
   checkSession: () =>
     http<Settings>("/api/settings/check-session", { method: "POST" }),
+  /** 현재 로그인 세션 파일(state.json)을 받아 브라우저에서 다운로드 */
+  exportSession: async () => {
+    const res = await fetch("/api/settings/session/export");
+    if (!res.ok) {
+      let message = "세션 내보내기 실패";
+      try {
+        const body = await res.json();
+        if (body?.error) message = body.error;
+      } catch {
+        /* ignore */
+      }
+      throw new Error(message);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "tistory-session.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+  /** 로컬에서 내보낸 세션 JSON 을 업로드해 적용 */
+  importSession: (state: unknown) =>
+    http<Settings & { imported: boolean }>("/api/settings/session/import", {
+      method: "POST",
+      body: JSON.stringify(state),
+    }),
 
   // autopilot
   getAutopilot: () => http<AutopilotState>("/api/autopilot"),

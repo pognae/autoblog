@@ -60,6 +60,39 @@ export default function SettingsPage() {
     }
   };
 
+  const exportSession = async () => {
+    setBusy("export");
+    setMsg("");
+    try {
+      await api.exportSession();
+      setMsg("세션 파일을 내려받았습니다. 클라우드 서버의 설정에서 '세션 가져오기'로 업로드하세요.");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "내보내기 실패");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const importSession = async (file: File) => {
+    setBusy("import");
+    setMsg("");
+    try {
+      const text = await file.text();
+      const state = JSON.parse(text);
+      const s = await api.importSession(state);
+      setSettings(s);
+      setMsg(
+        s.loggedIn
+          ? "세션을 가져왔고 유효성도 확인했습니다."
+          : "세션을 저장했지만 유효성 확인에 실패했습니다. 블로그 이름/세션 만료를 확인하세요.",
+      );
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "가져오기 실패");
+    } finally {
+      setBusy("");
+    }
+  };
+
   if (!settings) return <p className="text-slate-400">불러오는 중...</p>;
 
   return (
@@ -127,6 +160,38 @@ export default function SettingsPage() {
           >
             세션 확인
           </button>
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+        <h3 className="font-medium">세션 이전 (클라우드 배포용)</h3>
+        <p className="text-sm text-slate-400">
+          클라우드(원격) 서버는 로그인 창을 직접 띄울 수 없습니다. <b>내 PC에서 로그인</b>한 뒤
+          세션을 <b>내보내기</b> 하고, 클라우드에 올린 대시보드의 설정에서 <b>가져오기</b> 하면
+          원격 서버도 로그인 상태로 발행할 수 있습니다.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            disabled={busy === "export"}
+            onClick={exportSession}
+            className="rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800 disabled:opacity-50"
+          >
+            {busy === "export" ? "내보내는 중..." : "세션 내보내기 (다운로드)"}
+          </button>
+          <label className="cursor-pointer rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800">
+            {busy === "import" ? "가져오는 중..." : "세션 가져오기 (업로드)"}
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              disabled={busy === "import"}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) importSession(f);
+                e.target.value = "";
+              }}
+            />
+          </label>
         </div>
       </section>
 
