@@ -7,20 +7,97 @@
 
 ## 목차
 
-1. [동작 방식 (중요)](#동작-방식-중요)
-2. [작업한 내용 (구현 기능)](#작업한-내용-구현-기능)
-3. [기술 스택](#기술-스택)
-4. [폴더 구조](#폴더-구조)
-5. [설치 방법](#설치-방법)
-6. [실행 방법](#실행-방법)
-7. [사용법 (단계별)](#사용법-단계별)
-8. [Markdown 작성 규칙](#markdown-작성-규칙)
-9. [환경변수 설정](#환경변수-설정)
-10. [REST API 명세](#rest-api-명세)
-11. [데이터 저장 위치](#데이터-저장-위치)
-12. [문제 해결 (트러블슈팅)](#문제-해결-트러블슈팅)
-13. [주의사항 / 한계](#주의사항--한계)
-14. [작업 기록 (변경 이력)](#작업-기록-변경-이력)
+1. [새 컴퓨터에서 처음부터 실행하기 (Quick Start)](#새-컴퓨터에서-처음부터-실행하기-quick-start)
+2. [동작 방식 (중요)](#동작-방식-중요)
+3. [작업한 내용 (구현 기능)](#작업한-내용-구현-기능)
+4. [기술 스택](#기술-스택)
+5. [폴더 구조](#폴더-구조)
+6. [설치 방법 (상세)](#설치-방법-상세)
+7. [실행 방법 (상세)](#실행-방법-상세)
+8. [ChatGPT 계정 OAuth(openai-oauth)로 OpenAI 쓰기](#chatgpt-계정-oauthopenai-oauth로-openai-쓰기)
+9. [사용법 (단계별)](#사용법-단계별)
+10. [Markdown 작성 규칙](#markdown-작성-규칙)
+11. [환경변수 설정](#환경변수-설정)
+12. [REST API 명세](#rest-api-명세)
+13. [데이터 저장 위치](#데이터-저장-위치)
+14. [문제 해결 (트러블슈팅)](#문제-해결-트러블슈팅)
+15. [주의사항 / 한계](#주의사항--한계)
+16. [작업 기록 (변경 이력)](#작업-기록-변경-이력)
+
+---
+
+## 새 컴퓨터에서 처음부터 실행하기 (Quick Start)
+
+> 아무것도 설치되지 않은 **완전히 새 컴퓨터**에서 이 프로그램을 처음 실행할 때, 아래 순서를 위에서부터 그대로 따라 하면 됩니다. (Windows / macOS / Linux 공통, 명령은 동일)
+
+### 0. 사전 준비물 설치 (최초 1회)
+
+| 프로그램 | 버전 | 확인 명령 | 다운로드 |
+| --- | --- | --- | --- |
+| **Node.js** | 20 이상 (22 권장) | `node -v` | <https://nodejs.org> 의 LTS 버전 |
+| **npm** | 9 이상 (Node 설치 시 같이 설치됨) | `npm -v` | (Node 포함) |
+| **Git** | 최신 | `git --version` | <https://git-scm.com> |
+
+> Node 설치 후 터미널(Windows는 PowerShell)을 **새로 연 다음** `node -v` 가 `v20` 이상으로 나오는지 먼저 확인하세요.
+
+### 1. 소스 코드 내려받기
+
+```bash
+git clone <이-저장소-URL> autoblog
+cd autoblog
+```
+
+> 이미 폴더(예: `d:\dev\autoblog`)가 있다면 이 단계는 건너뛰고 해당 폴더에서 터미널을 엽니다.
+
+### 2. 의존성 설치 (서버 + 웹 + 브라우저 한 번에)
+
+루트 폴더에서 **딱 한 번** 실행합니다.
+
+```bash
+npm install
+```
+
+이 한 줄이 다음을 모두 자동 수행합니다.
+1. `server`, `web` 워크스페이스 의존성 설치
+2. `postinstall` 훅으로 Playwright용 **Chromium 브라우저 자동 다운로드**(약 180MB)
+
+> Chromium 다운로드가 실패하면 수동으로:
+> ```bash
+> npx playwright install chromium
+> ```
+
+### 3. 환경변수 파일 만들기
+
+`server/.env.example` 를 복사해 `server/.env` 를 만듭니다. (기본값만으로도 바로 실행됩니다)
+
+```bash
+# Windows (PowerShell)
+Copy-Item server/.env.example server/.env
+
+# macOS / Linux
+cp server/.env.example server/.env
+```
+
+> AI 자동 발행을 쓰려면 나중에 `server/.env` 에 `OPENAI_API_KEY` 또는 `GEMINI_API_KEY` 를 채우거나, UI(자동 발행 탭)에서 입력하면 됩니다. API 키 결제 없이 ChatGPT 계정으로 쓰려면 [openai-oauth 섹션](#chatgpt-계정-oauthopenai-oauth로-openai-쓰기)을 참고하세요.
+
+### 4. 실행
+
+```bash
+npm run dev
+```
+
+- 백엔드: <http://localhost:4000>
+- 대시보드: **<http://localhost:5173>** ← 브라우저로 이 주소 접속
+
+### 5. 최초 로그인 (1회)
+
+1. 대시보드 **설정** 탭 → **블로그 이름** 저장 (`myblog.tistory.com` 이면 `myblog`).
+2. **로그인** 버튼 → 실제 브라우저 창이 열리면 **직접 티스토리(카카오) 로그인**.
+3. "로그인됨" 으로 바뀌면 세션이 `server/.session/state.json` 에 저장됩니다.
+
+이제 글을 작성·예약하거나, 자동 발행을 설정하면 됩니다. 자세한 단계는 [사용법](#사용법-단계별)을 참고하세요.
+
+> ⚠️ 발행은 **브라우저 창을 띄우는 방식**이라, 발행 시각에 **PC가 켜져 있고 로그인 세션이 유효**해야 합니다.
 
 ---
 
@@ -149,11 +226,12 @@ autoblog2/
 
 ---
 
-## 설치 방법
+## 설치 방법 (상세)
 
 ### 사전 요구사항
-- **Node.js 20 이상** (개발은 v22에서 검증)
-- npm 9 이상
+- **Node.js 20 이상** (개발은 v22에서 검증), npm 9 이상
+- **Git** (소스 내려받기용)
+- 인터넷 연결 (Chromium 다운로드 및 AI 호출용)
 
 ### 설치
 
@@ -164,7 +242,7 @@ npm install
 ```
 
 이 명령은 다음을 자동으로 수행합니다.
-1. 워크스페이스(server, web) 의존성 설치
+1. 워크스페이스(server, web) 의존성 설치 (npm workspaces)
 2. `postinstall` 훅으로 Playwright용 **Chromium 브라우저 자동 다운로드** (약 180MB)
 
 > Chromium 자동 설치가 실패하면 수동으로 실행하세요.
@@ -172,32 +250,89 @@ npm install
 > npx playwright install chromium
 > ```
 
+### 환경변수 파일
+
+`server/.env.example` → `server/.env` 로 복사합니다. (없어도 기본값으로 동작하지만, 권장)
+자세한 항목은 [환경변수 설정](#환경변수-설정)을 참고하세요.
+
 ---
 
-## 실행 방법
+## 실행 방법 (상세)
 
-### 개발 모드 (백엔드 + 프론트 동시 실행)
+### 개발 모드 (백엔드 + 프론트 동시 실행) — 권장
 
 ```bash
 npm run dev
 ```
 
-- 백엔드: http://localhost:4000
-- 대시보드: **http://localhost:5173** ← 브라우저로 접속
+- 백엔드: <http://localhost:4000>
+- 대시보드: **<http://localhost:5173>** ← 브라우저로 접속
 
 ### 개별 실행
 
 ```bash
-npm run dev:server   # 백엔드만
-npm run dev:web      # 프론트만
+npm run dev:server   # 백엔드만 (tsx watch)
+npm run dev:web      # 프론트만 (vite)
 ```
 
 ### 프로덕션 빌드 / 실행
 
 ```bash
 npm run build        # server + web 빌드
-npm start            # 백엔드 실행 (dist)
+npm start            # 백엔드 실행 (dist/index.js)
 ```
+
+> 프로덕션에서 대시보드를 따로 서빙하려면 `web` 빌드 결과(`web/dist`)를 정적 호스팅하거나 `npm run dev:web` 으로 띄우세요.
+
+### 전체 npm 스크립트 정리
+
+| 명령 | 설명 |
+| --- | --- |
+| `npm install` | 의존성 설치 + Chromium 자동 다운로드 |
+| `npm run dev` | 백엔드 + 프론트 동시 실행(개발) |
+| `npm run dev:server` / `npm run dev:web` | 백엔드 / 프론트 개별 실행 |
+| `npm run build` | 서버 + 웹 빌드 |
+| `npm start` | 빌드된 백엔드 실행 |
+| `npm run oauth:login` | (선택) ChatGPT 계정 OAuth 로그인 — 최초 1회 |
+| `npm run oauth:proxy` | (선택) openai-oauth 프록시 실행 (켜둔 채 사용) |
+
+---
+
+## ChatGPT 계정 OAuth(openai-oauth)로 OpenAI 쓰기
+
+OpenAI **API 크레딧 결제 없이**, 보유 중인 **ChatGPT 계정의 OAuth 토큰(Codex)** 으로 글/키워드 생성을 돌리고 싶을 때 사용하는 방식입니다. [openai-oauth](https://github.com/EvanZhouDev/openai-oauth) 라는 로컬 프록시가 `http://127.0.0.1:10531/v1` 에 **OpenAI 호환 엔드포인트**를 띄워 주며, 별도 API 키가 필요 없습니다.
+
+> 이 방식은 **선택 사항**입니다. 그냥 OpenAI/Gemini API 키를 쓸 거라면 이 섹션은 건너뛰어도 됩니다.
+
+### 단계
+
+1. **로그인 (최초 1회)** — ChatGPT 계정으로 로그인해 `~/.codex/auth.json` 을 생성합니다.
+
+```bash
+npm run oauth:login
+```
+
+2. **프록시 실행** — 사용하는 동안 이 터미널은 **켜둔 채로** 둡니다. (별도 터미널 창 권장)
+
+```bash
+npm run oauth:proxy
+```
+
+3. **AutoBlog 설정** — 대시보드 **자동 발행** 탭(또는 `server/.env`)에서:
+   - **OpenAI Base URL** = `http://127.0.0.1:10531/v1`
+   - **OpenAI 모델** = `gpt-5.4` 등 **Codex 플랜에서 제공되는 모델** (기존 `gpt-4o-mini` 는 프록시에서 미제공일 수 있음)
+   - **API 키는 비워둬도 됨** (OAuth 토큰을 사용)
+
+   `.env` 로 설정하는 경우:
+   ```bash
+   OPENAI_BASE_URL=http://127.0.0.1:10531/v1
+   OPENAI_MODEL=gpt-5.4
+   # OPENAI_API_KEY 는 비워둬도 됨
+   ```
+
+4. 이제 평소처럼 **자동 발행**(키워드 생성 / 지금 1회 실행 / 자동 스케줄)을 사용하면 됩니다.
+
+> ⚠️ openai-oauth 는 **비공식 커뮤니티 프로젝트**로 OpenAI 와 무관하며, 개인용 로컬 실험 용도로만 사용하세요. `~/.codex/auth.json` 의 토큰은 **비밀번호급 자격증명**이므로 외부에 노출하지 마세요. 제공되는 모델은 Codex 플랜에 따라 달라집니다.
 
 ---
 
@@ -286,10 +421,11 @@ console.log("코드 블록도 지원");
 | `SCHEDULER_CRON` | `* * * * *` | 예약 글 확인 주기 (cron) |
 | `SCHEDULER_AUTOSTART` | `true` | 서버 시작 시 스케줄러 자동 실행 |
 | `PW_HEADLESS` | `false` | `true` 면 발행 시 브라우저를 숨김(headless). 단 티스토리/카카오가 봇으로 감지해 로그인 페이지로 튕길 수 있어 **`false`(창 표시) 권장** |
-| `OPENAI_API_KEY` | (없음) | ChatGPT 자동 글 생성용 API 키. UI(자동 발행 탭)에서 입력해도 됨 |
-| `OPENAI_MODEL` | `gpt-4o-mini` | 글/키워드 생성에 쓸 OpenAI 모델 |
+| `OPENAI_API_KEY` | (없음) | ChatGPT 자동 글 생성용 API 키. UI(자동 발행 탭)에서 입력해도 됨. OAuth 프록시 사용 시 비워도 됨 |
+| `OPENAI_MODEL` | `gpt-4o-mini` | 글/키워드 생성에 쓸 OpenAI 모델. OAuth 프록시 사용 시 `gpt-5.4` 등 Codex 모델 |
+| `OPENAI_BASE_URL` | (없음=공식 API) | OpenAI 호환 Base URL. openai-oauth 프록시를 쓰려면 `http://127.0.0.1:10531/v1` |
 | `GEMINI_API_KEY` | (없음) | Google Gemini API 키. OpenAI 와 함께 등록 시 토큰 남은 쪽으로 자동 전환 |
-| `GEMINI_MODEL` | `gemini-2.0-flash` | 글/키워드 생성에 쓸 Gemini 모델 |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | 글/키워드 생성에 쓸 Gemini 모델 |
 
 ---
 
