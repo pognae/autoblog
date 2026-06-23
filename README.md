@@ -326,21 +326,21 @@ npm start            # 백엔드 실행 (dist/index.js)
 
 2. **cloudtype 에서 프로젝트 생성** → GitHub 저장소 연결 → **빌드 방식: Dockerfile** 선택.
    - **포트**: `3000` (Dockerfile 기본값. cloudtype 가 주입하는 `PORT` 를 자동 사용)
-   - **환경변수**: 필요에 따라 아래를 설정합니다.
+   - **환경변수**: `server/.env.example` 의 **시크릿 4개만** 등록하면 됩니다. (나머지 설정은 `config.json`/`app-config.json` 으로 함께 배포됨)
 
-     | 변수 | 값(예) |
-     | --- | --- |
-     | `GEMINI_API_KEY` | (본인 Gemini 키) |
-     | `OPENAI_API_KEY` | (선택, 본인 OpenAI 키) |
-     | `GEMINI_MODEL` | `gemini-2.5-flash` |
-     | `PW_HEADLESS` | `false` (기본값 유지 권장) |
+     | 변수 | 값(예) | 비고 |
+     | --- | --- | --- |
+     | `OPENAI_API_KEY` | (본인 OpenAI 키) | 둘 중 1개 이상 필수 |
+     | `GEMINI_API_KEY` | (본인 Gemini 키) | 둘 중 1개 이상 필수 |
+     | `TELEGRAM_BOT_TOKEN` | (봇 토큰) | 알림 쓸 때만 |
+     | `TELEGRAM_CHAT_ID` | (채팅 ID) | 알림 쓸 때만 |
 
-   - **글감·DB는 이미지/git에 함께 배포됩니다**: `server/data/posts/*.md`(글감), `server/data/db.json`(글 메타데이터)이 포함되어 배포 시 로컬에서 만든 글감이 그대로 올라갑니다.
-   - **`app-config.json`은 git/이미지에 포함하지 않습니다**: 이 파일에는 **OpenAI·Gemini API 키·텔레그램 봇 토큰**이 들어가 GitHub Push Protection에 걸립니다. API 키는 **환경변수**(`GEMINI_API_KEY`, `OPENAI_API_KEY` 등)로 주입하고, 화면 설정(블로그 이름·자동발행·텔레그램)은 배포 후 대시보드에서 다시 저장하거나 **영속 볼륨**으로 유지하세요.
-   - **영속 볼륨(선택)**: 무료 컨테이너는 재배포/재시작 시 디스크가 초기화됩니다. **운영 중 서버에서 새로 만든 글/세션/설정**을 유지하려면 볼륨을 연결하세요.
+     > 모델명·포트·헤드리스 등 비밀이 아닌 설정은 `server/config.json` 에 있어 함께 배포됩니다. 플랫폼에서 덮어쓰려면 같은 이름의 환경변수(`PORT`, `PW_HEADLESS`, `OPENAI_MODEL` 등)를 추가하면 우선 적용됩니다.
+
+   - **글감·DB·설정파일이 git/이미지에 함께 배포됩니다**: `server/data/posts/*.md`(글감), `server/data/db.json`(글 메타데이터), `server/data/app-config.json`(화면 설정)이 포함됩니다. **민감정보는 모두 `.env` 전용이라 이 파일들엔 키/토큰이 들어가지 않으므로** GitHub Push Protection 에 걸리지 않습니다.
+   - **영속 볼륨(선택)**: 무료 컨테이너는 재배포/재시작 시 디스크가 초기화됩니다. **운영 중 서버에서 새로 만든 글/세션**을 유지하려면 볼륨을 연결하세요.
      - `/app/server/.session` (로그인 세션 `state.json`)
-     - `/app/server/data` (글/DB + **`app-config.json`** — 화면 입력 설정. API 키는 env 로, 나머지 설정은 이 볼륨에 저장)
-     > `/app/server/data` 볼륨을 붙이면 빈 볼륨이 이미지에 구운 글감(`posts/`, `db.json`)을 가릴 수 있습니다. 이미지에 구운 글감을 그대로 쓰려면 볼륨 대신 git 에 포함된 데이터를 사용하세요.
+     > `/app/server/data` 에 빈 볼륨을 붙이면 이미지에 구운 글감(`posts/`, `db.json`, `app-config.json`)이 가려질 수 있습니다. 구운 데이터를 그대로 쓰려면 이 경로엔 볼륨을 붙이지 마세요.
 
 3. **배포 완료 후 대시보드 접속** → **설정 탭에서 블로그 이름 저장**.
 
@@ -381,13 +381,17 @@ docker run -p 3000:3000 -e GEMINI_API_KEY=... autoblog
 2. 방금 만든 **내 봇과 대화를 시작**(아무 메시지나 전송)합니다.
 3. 브라우저에서 `https://api.telegram.org/bot<봇토큰>/getUpdates` 접속 → 응답 JSON 의 `result[].message.chat.id` 값이 **채팅 ID** 입니다.
 
-### 적용 (화면 입력 권장)
+### 적용 (봇 토큰·채팅 ID 는 .env 전용)
 
-- 대시보드 **설정 탭 → 텔레그램 상태 알림** 에서 **봇 토큰 · 채팅 ID** 를 입력하고 **"텔레그램 설정 저장"** 을 누릅니다.
+- **봇 토큰·채팅 ID 는 민감정보이므로 `server/.env`(또는 클라우드 환경변수)에만 설정합니다.**
+  ```
+  TELEGRAM_BOT_TOKEN=123456:ABC-...
+  TELEGRAM_CHAT_ID=465961914
+  ```
+- 대시보드 **설정 탭 → 텔레그램 상태 알림** 에서는 토큰/채팅 ID 의 **설정 여부만 표시**되며, 종류별 on/off·주기를 조정합니다.
   - 저장 즉시 모니터가 재시작되어 새 설정이 적용됩니다(서버 재시작 불필요).
-  - 토큰은 화면에 다시 노출되지 않습니다. 변경할 때만 입력하고, 비우면 기존 토큰이 유지됩니다(지우려면 `-` 입력).
   - **"테스트 알림 보내기"** 로 즉시 동작을 확인할 수 있습니다.
-- 입력값은 `server/data/db.json` 과 `app-config.json` 에 저장되어 재시작/재배포 후에도 유지됩니다.
+- 종류별 on/off·주기 설정은 `db.json`·`app-config.json` 에 저장되어 재시작/재배포 후에도 유지됩니다.
 
 ### 알림 종류별 스위치 + 개별 주기
 
@@ -402,7 +406,7 @@ docker run -p 3000:3000 -e GEMINI_API_KEY=... autoblog
 - 스위치를 끄면 해당 종류는 전송되지 않습니다. 각 주기는 1~1440분 사이로 설정합니다.
 - 내부적으로는 1분마다 도는 마스터 틱이 종류별 주기 도래 여부를 판정해 보냅니다. (세션 점검은 한 틱당 1회만 수행해 중복 브라우저 실행을 막습니다)
 
-> (선택) 환경변수 폴백: 토큰/채팅 ID는 화면 입력이 비어 있을 때만 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`(`server/.env` 또는 클라우드 환경변수)가 사용됩니다. 종류별 on/off·주기는 화면(설정 파일) 값만 사용합니다. (`TELEGRAM_NOTIFY_MINUTES` 는 구버전 단일 주기용으로, 이제 화면 설정의 정기 보고 주기로 대체됩니다.)
+> 봇 토큰/채팅 ID 는 `TELEGRAM_BOT_TOKEN`·`TELEGRAM_CHAT_ID`(`.env`/클라우드 환경변수)에서만 읽습니다. 종류별 on/off·주기는 화면(설정 파일)에서 관리합니다.
 
 ### 알림 내용
 
@@ -526,26 +530,43 @@ console.log("코드 블록도 지원");
 
 ---
 
-## 환경변수 설정
+## 설정 파일 구조 (시크릿 vs 배포 설정)
 
-`server/.env.example` 를 `server/.env` 로 복사해 조정합니다.
+설정을 **3곳**으로 분리했습니다. **시크릿만 `.env`** 에 두고, 나머지는 git/배포에 함께 포함됩니다.
 
-| 변수 | 기본값 | 설명 |
+| 위치 | 내용 | git/배포 |
 | --- | --- | --- |
-| `PORT` | `4000` | 백엔드 포트 |
-| `WEB_ORIGIN` | `http://localhost:5173` | CORS 허용 출처 |
-| `SCHEDULER_CRON` | `* * * * *` | 예약 글 확인 주기 (cron) |
-| `SCHEDULER_AUTOSTART` | `true` | 서버 시작 시 스케줄러 자동 실행 |
-| `PW_HEADLESS` | `false` | `true` 면 발행 시 브라우저를 숨김(headless). 단 티스토리/카카오가 봇으로 감지해 로그인 페이지로 튕길 수 있어 **`false`(창 표시) 권장** |
-| `OPENAI_API_KEY` | (없음) | ChatGPT 자동 글 생성용 API 키. UI(자동 발행 탭)에서 입력해도 됨. OAuth 프록시 사용 시 비워도 됨 |
-| `OPENAI_MODEL` | `gpt-4o-mini` | 글/키워드 생성에 쓸 OpenAI 모델. OAuth 프록시 사용 시 `gpt-5.4` 등 Codex 모델 |
-| `OPENAI_BASE_URL` | (없음=공식 API) | OpenAI 호환 Base URL. openai-oauth 프록시를 쓰려면 `http://127.0.0.1:10531/v1` |
-| `GEMINI_API_KEY` | (없음) | Google Gemini API 키. OpenAI 와 함께 등록 시 토큰 남은 쪽으로 자동 전환 |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | 글/키워드 생성에 쓸 Gemini 모델 |
-| `TELEGRAM_BOT_TOKEN` | (없음) | (폴백) 텔레그램 봇 토큰. **화면 입력이 우선**, 비었을 때만 사용 |
-| `TELEGRAM_CHAT_ID` | (없음) | (폴백) 알림 받을 채팅 ID. **화면 입력이 우선** |
-| `TELEGRAM_NOTIFY_MINUTES` | `360` | (폴백) 상태 점검/알림 주기(분). **화면 입력이 우선** |
-| `APP_CONFIG_FILE` | `server/data/app-config.json` | 화면 입력 설정을 저장하는 파일 경로. 영속 볼륨 경로로 바꾸면 재배포 후에도 유지 |
+| `server/.env` | **시크릿만** — API 키, 텔레그램 봇 토큰/채팅 ID | ❌ 제외(로컬/플랫폼 환경변수) |
+| `server/config.json` | 비밀 아닌 서버 설정 — 포트·CORS·스케줄러·헤드리스·모델명·OpenAI Base URL | ✅ 포함 |
+| `server/data/app-config.json` | 화면 설정 — 블로그 이름·자동발행 일정/모델·텔레그램 알림 종류·주기 | ✅ 포함 |
+
+### `.env` (시크릿 전용)
+
+`server/.env.example` 를 `server/.env` 로 복사해 채웁니다. 들어가는 값은 **이 4개뿐**입니다.
+
+| 변수 | 설명 |
+| --- | --- |
+| `OPENAI_API_KEY` | ChatGPT 자동 글 생성용 API 키 (Gemini 와 둘 중 1개 이상) |
+| `GEMINI_API_KEY` | Google Gemini API 키 (실패 시 자동 전환) |
+| `TELEGRAM_BOT_TOKEN` | 텔레그램 봇 토큰 (알림 쓸 때만) |
+| `TELEGRAM_CHAT_ID` | 알림 받을 채팅 ID (알림 쓸 때만) |
+
+### `server/config.json` (비밀 아닌 서버 설정 · 배포 포함)
+
+| 키 | 기본값 | 설명 |
+| --- | --- | --- |
+| `port` | `4000` | 백엔드 포트 (Cloudtype 등은 `PORT` 환경변수로 자동 주입) |
+| `webOrigin` | `http://localhost:5173` | 개발 시 CORS 허용 출처 |
+| `scheduler.cron` | `* * * * *` | 예약 글 확인 주기 (cron) |
+| `scheduler.autoStart` | `true` | 서버 시작 시 스케줄러 자동 실행 |
+| `playwright.headless` | `false` | `true` 면 headless. 봇 감지 회피 위해 **`false` 권장** |
+| `openai.model` | `gpt-4o-mini` | OpenAI 모델 (화면에서도 변경 가능) |
+| `openai.baseUrl` | `""`(공식 API) | OpenAI 호환 Base URL. openai-oauth 프록시: `http://127.0.0.1:10531/v1` |
+| `gemini.model` | `gemini-2.5-flash` | Gemini 모델 (화면에서도 변경 가능) |
+
+> ⚙️ 우선순위는 **환경변수 > `config.json` > 코드 기본값** 입니다. 같은 이름의 환경변수(`PORT`, `PW_HEADLESS`, `OPENAI_MODEL` 등)를 넣으면 파일값보다 우선하므로, 플랫폼별 덮어쓰기도 가능합니다. (`APP_CONFIG_FILE` 환경변수로 `app-config.json` 경로를 영속 볼륨으로 옮길 수 있습니다.)
+
+> 🔑 **민감정보(API 키·텔레그램 토큰/채팅 ID)는 오직 `.env`에서만 읽습니다.** `config.json`·`app-config.json`·`db.json` 에는 시크릿이 없으므로 git/배포에 포함해도 GitHub Push Protection 에 걸리지 않습니다.
 
 > 텔레그램·자동발행·블로그 이름 등 **화면에서 입력한 설정은 `app-config.json` 파일에 저장**되며, 서버 시작 시 이 파일을 읽어 복원합니다(환경변수보다 우선). 자세한 내용은 [설정 영속화](#설정-영속화-화면-입력-설정-파일-저장) 참고.
 
@@ -621,7 +642,7 @@ console.log("코드 블록도 지원");
 | 경로 | 내용 |
 | --- | --- |
 | `server/data/db.json` | 글 메타데이터 + 키워드 계획 + AI 사용량 등 운영 데이터 (lowdb) |
-| `server/data/app-config.json` | **화면에서 입력한 설정**(블로그 이름 + 자동발행 + 텔레그램). **API 키·봇 토큰 포함 → git 제외**. 클라우드에서는 볼륨 또는 배포 후 화면에서 재설정 |
+| `server/data/app-config.json` | **화면에서 입력한 설정**(블로그 이름 + 자동발행 모델/일정 + 텔레그램 알림 종류·주기). **민감정보 없음(키/토큰은 .env 전용) → git/배포에 포함** |
 | `server/data/posts/*.md` | 글 마크다운 원본 |
 | `server/.session/state.json` | 로그인 세션 스냅샷(storageState, 세션 쿠키 포함) |
 | `server/screenshots/` | 발행 실패 시 디버깅 스크린샷 |
@@ -632,12 +653,13 @@ console.log("코드 블록도 지원");
 
 대시보드 화면에서 입력한 **설정**은 운영 데이터(`db.json`)와 분리된 **전용 파일 `app-config.json`** 에 저장됩니다. 덕분에 프로그램을 수정/재배포해도 이 파일만 있으면 설정이 그대로 복원됩니다.
 
-### 저장되는 항목
+### 저장되는 항목 (비밀이 아닌 설정만)
 
 - **블로그 이름** (설정 탭)
-- **자동 발행 설정** — 주제/타깃/시각/개수/공개범위, OpenAI·Gemini 모델·API 키·Base URL (자동 발행 탭)
-- **텔레그램 설정** — 봇 토큰/채팅 ID/알림 주기 (설정 탭)
+- **자동 발행 설정** — 주제/타깃/시각/개수/공개범위, OpenAI·Gemini **모델**, OpenAI Base URL (자동 발행 탭)
+- **텔레그램 알림** — 종류별 on/off + 주기 (설정 탭)
 
+> 🔑 **API 키·텔레그램 봇 토큰/채팅 ID 같은 민감정보는 이 파일에 저장하지 않습니다.** 오직 `.env`(환경변수)에서만 읽으므로, 설정 파일을 git/배포에 안전하게 포함할 수 있습니다.
 > 로그인 세션은 별도로 `server/.session/state.json` 에 저장됩니다. 발행한 글 본문/메타데이터·키워드 계획·AI 사용량은 `db.json` 에 남습니다.
 
 ### 동작 방식
@@ -687,6 +709,44 @@ console.log("코드 블록도 지원");
 ## 작업 기록 (변경 이력)
 
 > 이 프로젝트에 적용한 모든 작업/변경 사항을 시간순으로 기록합니다. (최신 항목이 위)
+
+### 2026-06-23 — .env 는 시크릿만, 비밀 아닌 설정은 config.json 으로 분리
+
+**목표**
+- `.env` 에는 **프로그램 구동에 꼭 필요한 키 + GitHub 푸시 보호에 걸리는 시크릿만** 남기고, 모델명·포트·스케줄러·헤드리스 등 비밀이 아닌 설정은 배포에 함께 포함되는 파일로 분리.
+
+**변경**
+- `server/config.json` 신규(커밋·배포 포함): 비밀 아닌 서버 설정(`port`/`webOrigin`/`scheduler`/`playwright.headless`/`openai.model`·`baseUrl`/`gemini.model`).
+- `config.ts`: `config.json` 을 읽어 **환경변수 > config.json > 코드 기본값** 순으로 적용. (env 가 있으면 항상 우선 → 플랫폼 덮어쓰기 가능)
+- `.env`/`.env.example`: `OPENAI_API_KEY`/`GEMINI_API_KEY`/`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` **시크릿 4개만** 남기고, `PORT`·`WEB_ORIGIN`·`SCHEDULER_*`·`PW_HEADLESS`·`OPENAI_MODEL`·`OPENAI_BASE_URL`·`GEMINI_MODEL` 항목 제거.
+- README: "환경변수 설정" 을 "설정 파일 구조(시크릿 vs 배포 설정)" 로 개편하고 클라우드 배포 환경변수 표를 시크릿 4개로 축소.
+
+**효과**: Cloudtype 등에는 **시크릿 4개만** 환경변수로 넣으면 되고, 모델/포트/알림 등 나머지 설정은 파일로 함께 배포됨.
+
+### 2026-06-23 — 민감정보 .env 전용화 + 설정 파일 배포 포함
+
+**목표**
+- GitHub 푸시를 막던 시크릿(키/토큰)을 설정 파일에서 완전히 분리. **민감정보는 `.env`(환경변수)에만**, 나머지 설정은 배포에 함께 포함.
+
+**서버**
+- `types.ts`: `AiProviderConfig` 에서 `apiKey` 제거(모델/baseUrl 만 유지), `TelegramConfig` 에서 `botToken`/`chatId` 제거(채널 설정만 유지).
+- `ai.ts`: OpenAI/Gemini 키를 `config.openai.apiKey`/`config.gemini.apiKey`(=.env)에서만 읽음.
+- `notifier.ts`: 텔레그램 봇 토큰/채팅 ID 를 `.env` 에서만 읽음. `monitorStatus` 의 `chatId`/`hasToken` 은 env 기준.
+- `routes/autopilot.ts`·`routes/monitor.ts`: 키/토큰/채팅 ID 입력 파라미터 제거. autopilot 의 `hasApiKey` 는 env 기준으로 표시.
+- `db.ts`·`config.store.ts`: 구버전 DB/설정 파일에 남아 있던 `apiKey`/`botToken`/`chatId` 를 로드 시 제거(되살아나지 않게).
+- `config.ts`: 미사용 `TELEGRAM_NOTIFY_MINUTES` 제거(채널 주기로 대체).
+
+**프론트**
+- `AutopilotPage.tsx`: OpenAI/Gemini **API 키 입력칸 제거**, 대신 ".env 로 설정 / 설정됨·미설정" 상태 표시. 모델·Base URL 은 계속 편집 가능.
+- `SettingsPage.tsx`: 텔레그램 **봇 토큰/채팅 ID 입력칸 제거**, env 설정 여부만 표시. 종류별 on/off·주기는 유지.
+- `api.ts`: `updateAutopilot`/`updateMonitor` 에서 키/토큰 파라미터 제거.
+
+**배포/문서**
+- `.gitignore`/`.dockerignore`: 이제 키가 없는 `db.json`·`app-config.json` 을 배포에 **포함**.
+- `.env.example`: cloudtype 환경변수로 그대로 복사 가능한 형태로 정리(필수/선택 구분).
+- README: 환경변수 표·텔레그램·클라우드 배포·설정 영속화 섹션을 "민감정보 .env 전용" 기준으로 갱신.
+
+**효과**: 설정 파일에 시크릿이 없어 GitHub Push Protection 에 걸리지 않고, `.env` 내용만 cloudtype 환경변수로 넣으면 배포가 완료됨.
 
 ### 2026-06-23 — 텔레그램 알림 종류별 스위치/주기 + 글감·설정 배포 포함
 

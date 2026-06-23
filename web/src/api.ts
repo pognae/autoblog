@@ -223,8 +223,8 @@ export const api = {
     hour?: number;
     minute?: number;
     visibility?: Post["visibility"];
-    openai?: { model?: string; apiKey?: string; baseUrl?: string };
-    gemini?: { model?: string; apiKey?: string };
+    openai?: { model?: string; baseUrl?: string };
+    gemini?: { model?: string };
   }) =>
     http<{ config: AutopilotConfig; plan: KeywordPlan | null }>(
       "/api/autopilot",
@@ -253,8 +253,6 @@ export const api = {
   // monitor (텔레그램 알림)
   getMonitor: () => http<MonitorStatus>("/api/monitor"),
   updateMonitor: (data: {
-    botToken?: string;
-    chatId?: string;
     heartbeat?: Partial<TelegramChannel>;
     loginAlert?: Partial<TelegramChannel>;
     failureAlert?: Partial<TelegramChannel>;

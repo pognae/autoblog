@@ -1,17 +1,17 @@
 {
   "version": 1,
-  "blogName": "my-blog",
+  "blogName": "gumdrop",
   "autopilot": {
     "enabled": false,
     "topic": "",
     "audience": "",
-    "postsPerDay": 1,
-    "hour": 9,
+    "postsPerDay": 2,
+    "hour": 8,
     "minute": 0,
     "visibility": "public",
     "openai": {
       "model": "gpt-4o-mini",
-      "baseUrl": ""
+      "baseUrl": "http://127.0.0.1:10531/v1"
     },
     "gemini": {
       "model": "gemini-2.5-flash"
@@ -22,5 +22,5 @@
     "loginAlert": { "enabled": true, "intervalMinutes": 60 },
     "failureAlert": { "enabled": true, "intervalMinutes": 60 }
   },
-  "savedAt": "2026-01-01T00:00:00.000Z"
+  "savedAt": "2026-06-23T00:13:38.007Z"
 }

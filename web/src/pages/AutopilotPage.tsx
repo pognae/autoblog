@@ -16,8 +16,6 @@ const PROVIDER_LABEL: Record<string, string> = {
 export default function AutopilotPage() {
   const [cfg, setCfg] = useState<AutopilotConfig | null>(null);
   const [plan, setPlan] = useState<KeywordPlan | null>(null);
-  const [openaiKey, setOpenaiKey] = useState("");
-  const [geminiKey, setGeminiKey] = useState("");
   const [aiStatus, setAiStatus] = useState<ProviderStatus[]>([]);
   const [busy, setBusy] = useState<string>("");
   const [msg, setMsg] = useState("");
@@ -55,15 +53,12 @@ export default function AutopilotPage() {
         visibility: cfg.visibility,
         openai: {
           model: cfg.openai.model,
-          apiKey: openaiKey || undefined,
           baseUrl: cfg.openai.baseUrl ?? "",
         },
-        gemini: { model: cfg.gemini.model, apiKey: geminiKey || undefined },
+        gemini: { model: cfg.gemini.model },
       });
       setCfg(r.config);
       setPlan(r.plan);
-      setOpenaiKey("");
-      setGeminiKey("");
       setMsg("설정을 저장했습니다.");
       loadStatus();
     } catch (e) {
@@ -295,6 +290,23 @@ export default function AutopilotPage() {
           </Field>
         </div>
 
+        {/* API 키 안내: 키는 서버 환경변수(.env)로만 관리 */}
+        <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3 text-xs text-slate-400">
+          <b className="text-slate-300">API 키는 서버 환경변수(.env)로 설정합니다.</b>{" "}
+          민감정보 보호를 위해 화면/설정 파일에 저장하지 않습니다.
+          <span className="mt-1 block">
+            OpenAI(<code>OPENAI_API_KEY</code>):{" "}
+            <span className={cfg.openai.hasApiKey ? "text-emerald-400" : "text-amber-400"}>
+              {cfg.openai.hasApiKey ? "설정됨" : "미설정"}
+            </span>
+            {"  ·  "}
+            Gemini(<code>GEMINI_API_KEY</code>):{" "}
+            <span className={cfg.gemini.hasApiKey ? "text-emerald-400" : "text-amber-400"}>
+              {cfg.gemini.hasApiKey ? "설정됨" : "미설정"}
+            </span>
+          </span>
+        </div>
+
         {/* OpenAI */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="OpenAI 모델">
@@ -304,17 +316,6 @@ export default function AutopilotPage() {
                 patch({ openai: { ...cfg.openai, model: e.target.value } })
               }
               placeholder="gpt-4o-mini"
-              className="ap-input"
-            />
-          </Field>
-          <Field
-            label={`OpenAI API 키 ${cfg.openai.hasApiKey ? "(설정됨)" : "(미설정)"}`}
-          >
-            <input
-              type="password"
-              value={openaiKey}
-              onChange={(e) => setOpenaiKey(e.target.value)}
-              placeholder={cfg.openai.hasApiKey ? "변경 시에만 입력" : "sk-..."}
               className="ap-input"
             />
           </Field>
@@ -342,18 +343,7 @@ export default function AutopilotPage() {
               onChange={(e) =>
                 patch({ gemini: { ...cfg.gemini, model: e.target.value } })
               }
-              placeholder="gemini-2.0-flash"
-              className="ap-input"
-            />
-          </Field>
-          <Field
-            label={`Gemini API 키 ${cfg.gemini.hasApiKey ? "(설정됨)" : "(미설정)"}`}
-          >
-            <input
-              type="password"
-              value={geminiKey}
-              onChange={(e) => setGeminiKey(e.target.value)}
-              placeholder={cfg.gemini.hasApiKey ? "변경 시에만 입력" : "AIza..."}
+              placeholder="gemini-2.5-flash"
               className="ap-input"
             />
           </Field>

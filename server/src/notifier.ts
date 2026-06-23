@@ -19,12 +19,11 @@ let lastLoggedIn: boolean | null = null;
 /** 채널별 마지막 전송 시각(ms). 주기 도래 판정에 사용. */
 const lastSent = { heartbeat: 0, loginAlert: 0, failureAlert: 0 };
 
-/** 토큰/채팅 ID 실효값: UI(DB) 우선, 비면 환경변수(config) 폴백. */
+/** 토큰/채팅 ID 는 민감정보이므로 환경변수(.env)에서만 읽는다. */
 function effectiveAuth(): { botToken: string; chatId: string } {
-  const t = db.data.telegram;
   return {
-    botToken: t.botToken?.trim() || config.telegram.botToken,
-    chatId: t.chatId?.trim() || config.telegram.chatId,
+    botToken: config.telegram.botToken.trim(),
+    chatId: config.telegram.chatId.trim(),
   };
 }
 
@@ -209,11 +208,11 @@ export async function sendTestNotification(): Promise<boolean> {
 export interface MonitorStatus {
   configured: boolean;
   running: boolean;
-  /** 봇 토큰이 저장돼 있는지 (값은 노출하지 않음) */
+  /** 봇 토큰이 .env 에 설정돼 있는지 (값은 노출하지 않음) */
   hasToken: boolean;
-  /** 채팅 ID (비밀이 아니므로 표시) */
+  /** 채팅 ID (.env 값. 비밀이 아니므로 표시) */
   chatId: string;
-  /** 환경변수(.env)로 설정돼 있는지 — UI 입력이 없을 때 폴백됨 */
+  /** 봇 토큰/채팅 ID 가 환경변수(.env)로만 관리됨을 의미 (항상 true) */
   fromEnv: boolean;
   /** 채널별 on/off + 주기 */
   heartbeat: TelegramChannel;
@@ -228,8 +227,8 @@ export function monitorStatus(): MonitorStatus {
     configured: Boolean(eff.botToken && eff.chatId),
     running: timer !== null,
     hasToken: Boolean(eff.botToken),
-    chatId: t.chatId || config.telegram.chatId,
-    fromEnv: Boolean(!t.botToken && config.telegram.botToken),
+    chatId: eff.chatId,
+    fromEnv: true,
     heartbeat: t.heartbeat,
     loginAlert: t.loginAlert,
     failureAlert: t.failureAlert,

@@ -2,7 +2,7 @@
   "settings": {
     "blogName": "gumdrop",
     "loggedIn": true,
-    "lastLoginCheckAt": "2026-06-23T00:33:15.278Z"
+    "lastLoginCheckAt": "2026-06-23T00:58:56.604Z"
   },
   "posts": [
     {
@@ -451,8 +451,6 @@
     }
   },
   "telegram": {
-    "botToken": "",
-    "chatId": "",
     "heartbeat": {
       "enabled": true,
       "intervalMinutes": 360
@@ -464,7 +462,6 @@
     "failureAlert": {
       "enabled": true,
       "intervalMinutes": 60
-    },
-    "intervalMinutes": 360
+    }
   }
 }

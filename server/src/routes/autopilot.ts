@@ -8,21 +8,28 @@ import {
   runNow,
 } from "../autopilot.js";
 import { savePersistedConfig } from "../config.store.js";
+import { config } from "../config.js";
 import type { AutopilotConfig } from "../types.js";
 
 export const autopilotRouter = Router();
 
-/** API 키는 노출하지 않고, 설정 여부(hasApiKey)만 내려준다. */
+/**
+ * 화면에 내려주는 설정. API 키는 민감정보라 저장/노출하지 않고,
+ * 환경변수(.env)에 설정돼 있는지 여부(hasApiKey)만 알려준다.
+ */
 function publicConfig(cfg: AutopilotConfig) {
   const { openai, gemini, ...rest } = cfg;
   return {
     ...rest,
     openai: {
       model: openai.model,
-      hasApiKey: Boolean(openai.apiKey),
+      // env 키가 있거나, OAuth 프록시(baseUrl)가 있으면 사용 가능
+      hasApiKey: Boolean(
+        config.openai.apiKey || config.openai.baseUrl || openai.baseUrl,
+      ),
       baseUrl: openai.baseUrl ?? "",
     },
-    gemini: { model: gemini.model, hasApiKey: Boolean(gemini.apiKey) },
+    gemini: { model: gemini.model, hasApiKey: Boolean(config.gemini.apiKey) },
   };
 }
 
@@ -37,8 +44,6 @@ autopilotRouter.get("/", (_req, res) => {
 const providerSchema = z
   .object({
     model: z.string().optional(),
-    /** 빈 문자열이면 기존 키 유지 */
-    apiKey: z.string().optional(),
     /** OpenAI 호환 base URL (빈 문자열이면 공식 API 로 초기화) */
     baseUrl: z.string().optional(),
   })
@@ -75,10 +80,8 @@ autopilotRouter.put("/", async (req, res) => {
     const p = d[provider];
     if (!p) continue;
     if (p.model !== undefined) cfg[provider].model = p.model;
-    if (p.apiKey !== undefined && p.apiKey.trim() !== "") {
-      cfg[provider].apiKey = p.apiKey.trim();
-    }
-    // baseUrl 은 빈 문자열로 초기화(공식 API 복귀)도 허용하므로 undefined 만 건너뛴다.
+    // API 키는 .env 에서만 관리하므로 여기서 받지 않는다.
+    // baseUrl 은 비밀이 아니므로 허용(빈 문자열로 초기화 = 공식 API 복귀).
     if (provider === "openai" && p.baseUrl !== undefined) {
       cfg.openai.baseUrl = p.baseUrl.trim();
     }

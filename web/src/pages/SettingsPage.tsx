@@ -19,8 +19,6 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [blogName, setBlogName] = useState("");
   const [monitor, setMonitor] = useState<MonitorStatus | null>(null);
-  const [tgToken, setTgToken] = useState("");
-  const [tgChatId, setTgChatId] = useState("");
   const [channels, setChannels] = useState<Record<ChannelKey, TelegramChannel>>(
     {
       heartbeat: { enabled: true, intervalMinutes: 360 },
@@ -40,7 +38,6 @@ export default function SettingsPage() {
   const loadMonitor = () =>
     api.getMonitor().then((m) => {
       setMonitor(m);
-      setTgChatId(m.chatId);
       setChannels({
         heartbeat: m.heartbeat,
         loginAlert: m.loginAlert,
@@ -103,20 +100,16 @@ export default function SettingsPage() {
     setMsg("");
     try {
       const m = await api.updateMonitor({
-        botToken: tgToken || undefined, // 비우면 기존 토큰 유지
-        chatId: tgChatId.trim(),
         heartbeat: channels.heartbeat,
         loginAlert: channels.loginAlert,
         failureAlert: channels.failureAlert,
       });
       setMonitor(m);
-      setTgChatId(m.chatId);
       setChannels({
         heartbeat: m.heartbeat,
         loginAlert: m.loginAlert,
         failureAlert: m.failureAlert,
       });
-      setTgToken("");
       setMsg("텔레그램 설정을 저장했습니다.");
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "저장 실패");
@@ -294,39 +287,25 @@ export default function SettingsPage() {
         </div>
         <p className="text-sm text-slate-400">
           일정 주기마다 <b>로그인 여부·서버 상태·글 통계</b>를 점검해 텔레그램으로 알립니다.
-          아래에 직접 입력해 저장하세요. (<b>@BotFather</b> 로 봇 생성 → 토큰, 봇과 대화 시작 후
-          <code> getUpdates </code>로 채팅 ID 확인)
-          {monitor?.fromEnv && (
-            <span className="mt-1 block text-amber-400">
-              ※ 현재 환경변수(.env)로 설정돼 있습니다. 아래에 입력해 저장하면 입력값이 우선합니다.
-            </span>
-          )}
+          (<b>@BotFather</b> 로 봇 생성 → 토큰, 봇과 대화 시작 후 <code>getUpdates</code> 로 채팅 ID 확인)
         </p>
 
-        <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-slate-300">
-            봇 토큰 {monitor?.hasToken ? "(설정됨)" : "(미설정)"}
+        {/* 봇 토큰/채팅 ID 는 민감정보 → .env 환경변수로만 설정 */}
+        <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3 text-xs text-slate-400">
+          <b className="text-slate-300">봇 토큰·채팅 ID 는 서버 환경변수(.env)로 설정합니다.</b>{" "}
+          민감정보 보호를 위해 화면/설정 파일에 저장하지 않습니다.
+          <span className="mt-1 block">
+            봇 토큰(<code>TELEGRAM_BOT_TOKEN</code>):{" "}
+            <span className={monitor?.hasToken ? "text-emerald-400" : "text-amber-400"}>
+              {monitor?.hasToken ? "설정됨" : "미설정"}
+            </span>
+            {"  ·  "}
+            채팅 ID(<code>TELEGRAM_CHAT_ID</code>):{" "}
+            <span className={monitor?.chatId ? "text-emerald-400" : "text-amber-400"}>
+              {monitor?.chatId ? monitor.chatId : "미설정"}
+            </span>
           </span>
-          <input
-            type="password"
-            value={tgToken}
-            onChange={(e) => setTgToken(e.target.value)}
-            placeholder={monitor?.hasToken ? "변경 시에만 입력 (지우려면 - 입력)" : "123456:ABC-..."}
-            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 outline-none focus:border-indigo-500"
-          />
-        </label>
-
-        <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-slate-300">
-            채팅 ID
-          </span>
-          <input
-            value={tgChatId}
-            onChange={(e) => setTgChatId(e.target.value)}
-            placeholder="123456789"
-            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 outline-none focus:border-indigo-500"
-          />
-        </label>
+        </div>
 
         {/* 알림 종류별 on/off 스위치 + 개별 주기 */}
         <div className="space-y-2">

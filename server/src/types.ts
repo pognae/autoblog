@@ -60,16 +60,20 @@ export interface KeywordPlan {
 /** AI 제공자 */
 export type AiProvider = "openai" | "gemini";
 
-/** 제공자별 설정 (API 키 + 모델) */
+/**
+ * 제공자별 설정 (모델 + 선택적 base URL).
+ *
+ * ⚠️ API 키는 여기(=db.json/app-config.json)에 저장하지 않는다.
+ *    키는 민감정보이므로 환경변수(.env: OPENAI_API_KEY / GEMINI_API_KEY)에서만 읽는다.
+ *    그래야 설정 파일을 git/배포에 안전하게 포함할 수 있다.
+ */
 export interface AiProviderConfig {
-  /** UI 에서 입력한 API 키 (있으면 env 보다 우선) */
-  apiKey: string;
   /** 사용할 모델 */
   model: string;
   /**
    * OpenAI 호환 base URL. 비워두면 공식 API(api.openai.com) 사용.
    * openai-oauth 로컬 프록시(http://127.0.0.1:10531/v1)를 넣으면
-   * ChatGPT 계정 OAuth 토큰으로 API 키 없이 호출한다.
+   * ChatGPT 계정 OAuth 토큰으로 API 키 없이 호출한다. (민감정보 아님)
    */
   baseUrl?: string;
 }
@@ -125,12 +129,14 @@ export interface TelegramChannel {
   intervalMinutes: number;
 }
 
-/** 텔레그램 상태 알림 설정 (UI 에서 입력, env 보다 우선) */
+/**
+ * 텔레그램 알림 설정 (종류별 on/off + 주기).
+ *
+ * ⚠️ 봇 토큰/채팅 ID 는 여기에 저장하지 않는다. 민감정보이므로
+ *    환경변수(.env: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID)에서만 읽는다.
+ *    여기에는 비밀이 아닌 "어떤 알림을 얼마나 자주 보낼지"만 둔다.
+ */
 export interface TelegramConfig {
-  /** @BotFather 봇 토큰 */
-  botToken: string;
-  /** 알림 받을 채팅 ID */
-  chatId: string;
   /** 정기 상태 보고 (서버/로그인/글 통계 요약) */
   heartbeat: TelegramChannel;
   /** 로그인 세션 만료 경고 */
@@ -156,9 +162,9 @@ export const DEFAULT_AUTOPILOT: AutopilotConfig = {
   hour: 10,
   minute: 0,
   visibility: "public",
-  openai: { apiKey: "", model: "gpt-4o-mini", baseUrl: "" },
+  openai: { model: "gpt-4o-mini", baseUrl: "" },
   // gemini-2.0-flash 는 무료 등급 한도가 0(limit:0)인 경우가 많아 2.5-flash 를 기본값으로 둔다.
-  gemini: { apiKey: "", model: "gemini-2.5-flash" },
+  gemini: { model: "gemini-2.5-flash" },
 };
 
 export const DEFAULT_AI_PROVIDER_STATE: AiProviderState = {
@@ -173,8 +179,6 @@ export const DEFAULT_AI_USAGE: AiUsage = {
 };
 
 export const DEFAULT_TELEGRAM: TelegramConfig = {
-  botToken: "",
-  chatId: "",
   heartbeat: { enabled: true, intervalMinutes: 360 },
   loginAlert: { enabled: true, intervalMinutes: 60 },
   failureAlert: { enabled: true, intervalMinutes: 60 },

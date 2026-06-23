@@ -98,17 +98,32 @@ export async function initPersistedConfig(): Promise<void> {
     void _d;
     void _r;
     void _a;
+    // 구버전 파일에 API 키가 남아 있어도 DB 로 되살리지 않는다(.env 전용).
+    const fileOpenai = { ...(fileAutopilot.openai ?? {}) } as Record<string, unknown>;
+    const fileGemini = { ...(fileAutopilot.gemini ?? {}) } as Record<string, unknown>;
+    delete fileOpenai.apiKey;
+    delete fileGemini.apiKey;
     db.data.autopilot = {
       ...db.data.autopilot,
       ...fileAutopilot,
-      openai: { ...db.data.autopilot.openai, ...(fileAutopilot.openai ?? {}) },
-      gemini: { ...db.data.autopilot.gemini, ...(fileAutopilot.gemini ?? {}) },
+      openai: { ...db.data.autopilot.openai, ...fileOpenai },
+      gemini: { ...db.data.autopilot.gemini, ...fileGemini },
     };
   }
   if (f.telegram) {
-    db.data.telegram = { ...db.data.telegram, ...f.telegram };
+    // 봇 토큰/채팅 ID 는 .env 전용 → 파일 값 중 채널 설정만 반영.
+    const ft = f.telegram as Partial<TelegramConfig>;
+    db.data.telegram = {
+      ...db.data.telegram,
+      ...(ft.heartbeat ? { heartbeat: ft.heartbeat } : {}),
+      ...(ft.loginAlert ? { loginAlert: ft.loginAlert } : {}),
+      ...(ft.failureAlert ? { failureAlert: ft.failureAlert } : {}),
+    };
   }
   await db.write();
+  // 복원 직후 파일을 다시 저장해, 구버전 파일에 남아 있던 민감정보(키/토큰)·
+  // 폐기된 필드를 깨끗한 현재 스키마로 덮어쓴다.
+  savePersistedConfig();
   console.log(
     `[config] 설정 파일에서 복원함: ${config.paths.appConfig}`,
   );

@@ -16,26 +16,27 @@ import type {
  *   누적 집계해 "사용한 토큰"을 보여준다. 사용 가능 여부는 마지막 호출 결과로 판단.
  */
 
-function openaiKey(cfg: AutopilotConfig): string {
-  return cfg.openai.apiKey?.trim() || config.openai.apiKey;
+// API 키는 민감정보이므로 환경변수(.env)에서만 읽는다. (설정 파일/DB 에 저장하지 않음)
+function openaiKey(): string {
+  return config.openai.apiKey;
 }
-function geminiKey(cfg: AutopilotConfig): string {
-  return cfg.gemini.apiKey?.trim() || config.gemini.apiKey;
+function geminiKey(): string {
+  return config.gemini.apiKey;
 }
-/** openai-oauth 등 OpenAI 호환 프록시 base URL (있으면 API 키 없이도 사용 가능) */
+/** openai-oauth 등 OpenAI 호환 프록시 base URL (있으면 API 키 없이도 사용 가능). 비밀 아님 → cfg 우선. */
 function openaiBaseUrl(cfg: AutopilotConfig): string {
   return cfg.openai.baseUrl?.trim() || config.openai.baseUrl;
 }
 /** OpenAI 사용 가능 조건: API 키가 있거나, OAuth 프록시 base URL 이 설정됨 */
 function openaiEnabled(cfg: AutopilotConfig): boolean {
-  return Boolean(openaiKey(cfg) || openaiBaseUrl(cfg));
+  return Boolean(openaiKey() || openaiBaseUrl(cfg));
 }
 
 /** 키가 등록된 제공자 목록 */
 export function configuredProviders(cfg: AutopilotConfig): AiProvider[] {
   const list: AiProvider[] = [];
   if (openaiEnabled(cfg)) list.push("openai");
-  if (geminiKey(cfg)) list.push("gemini");
+  if (geminiKey()) list.push("gemini");
   return list;
 }
 
@@ -94,7 +95,7 @@ async function callOpenAI(
   const proxyMode = Boolean(baseUrl);
   // 프록시(openai-oauth) 모드는 OAuth 토큰을 쓰므로 키가 필요 없다.
   // OpenAI SDK 는 비어 있는 apiKey 를 거부하므로 자리표시자를 넣는다.
-  const apiKey = openaiKey(cfg) || (proxyMode ? "openai-oauth" : "");
+  const apiKey = openaiKey() || (proxyMode ? "openai-oauth" : "");
   const client = new OpenAI({
     apiKey,
     ...(baseUrl ? { baseURL: baseUrl } : {}),
@@ -122,7 +123,7 @@ async function callGemini(
   cfg: AutopilotConfig,
   temperature: number,
 ): Promise<RawCompletion> {
-  const key = geminiKey(cfg);
+  const key = geminiKey();
   const model = cfg.gemini.model || config.gemini.model;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
   const body = {
@@ -230,7 +231,7 @@ async function complete(
   const providers = orderByAvailability(configuredProviders(cfg));
   if (providers.length === 0) {
     throw new Error(
-      "등록된 AI API 키가 없습니다. 자동 발행 설정에서 OpenAI 또는 Gemini 키를 입력해 주세요.",
+      "등록된 AI API 키가 없습니다. 서버 환경변수(.env)에 OPENAI_API_KEY 또는 GEMINI_API_KEY 를 설정해 주세요.",
     );
   }
 
