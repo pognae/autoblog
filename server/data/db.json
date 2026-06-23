@@ -64,7 +64,7 @@
       "visibility": "public",
       "status": "published",
       "createdAt": "2026-06-22T23:28:40.271Z",
-      "updatedAt": "2026-06-22T23:30:35.870Z",
+      "updatedAt": "2026-06-22T23:30:35.87Z",
       "lastError": "",
       "publishedUrl": "https://gumdrop.tistory.com/manage/posts/"
     },
@@ -108,7 +108,7 @@
       "model": "gemini-2.5-flash"
     },
     "lastRunResult": "✅ 알레르기 비염 증상 완화 → 발행완료 | ❌ 집에서 하는 유산소 운동 → 모든 AI 호출 실패 → Gemini: Gemini 503: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later. | OpenAI: 500 Bad Request",
-    "lastRunAt": "2026-06-22T23:35:17.200Z"
+    "lastRunAt": "2026-06-22T23:35:17.2Z"
   },
   "keywordPlan": {
     "month": "2026-06",
@@ -433,7 +433,7 @@
         "used": false
       }
     ],
-    "createdAt": "2026-06-22T07:41:34.250Z"
+    "createdAt": "2026-06-22T07:41:34.25Z"
   },
   "aiUsage": {
     "openai": {
