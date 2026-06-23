@@ -1,0 +1,472 @@
+{
+  "settings": {
+    "blogName": "gumdrop",
+    "loggedIn": true,
+    "lastLoginCheckAt": "2026-06-23T00:33:15.278Z"
+  },
+  "posts": [
+    {
+      "id": "CLr1suYaGJ",
+      "title": "여름철 피부 관리 루틴, 이제 땀과 유분 걱정 끝! 완벽 가이드",
+      "fileName": "CLr1suYaGJ.md",
+      "tags": [
+        "여름철피부관리",
+        "여름피부",
+        "피부관리루틴",
+        "자외선차단",
+        "클렌징",
+        "보습",
+        "이너뷰티",
+        "여름뷰티"
+      ],
+      "visibility": "public",
+      "status": "published",
+      "createdAt": "2026-06-22T07:42:01.321Z",
+      "updatedAt": "2026-06-22T07:42:32.339Z",
+      "lastError": "",
+      "publishedUrl": "https://gumdrop.tistory.com/manage/posts/"
+    },
+    {
+      "id": "R64uR_GQC7",
+      "title": "체지방 감소 식단 추천: 요요 없이 건강하게 살 빼는 비법",
+      "fileName": "R64uR_GQC7.md",
+      "tags": [
+        "체지방 감소 식단 추천",
+        "다이어트 식단",
+        "건강 식단",
+        "살 빼는 식단",
+        "체지방 태우기",
+        "식단 관리",
+        "요요 방지",
+        "단백질 식단"
+      ],
+      "visibility": "public",
+      "status": "published",
+      "createdAt": "2026-06-22T07:43:01.259Z",
+      "updatedAt": "2026-06-22T07:43:29.756Z",
+      "lastError": "",
+      "publishedUrl": "https://gumdrop.tistory.com/manage/posts/"
+    },
+    {
+      "id": "JWhrQbPk51",
+      "title": "잠 못 드는 밤, 이제 그만! 수면 부족 해결 방법 총정리",
+      "fileName": "JWhrQbPk51.md",
+      "tags": [
+        "수면 부족 해결 방법",
+        "숙면",
+        "잠 잘 자는 법",
+        "불면증",
+        "수면 습관",
+        "수면 환경",
+        "스트레스 관리",
+        "건강한 수면"
+      ],
+      "visibility": "public",
+      "status": "published",
+      "createdAt": "2026-06-22T23:28:40.271Z",
+      "updatedAt": "2026-06-22T23:30:35.870Z",
+      "lastError": "",
+      "publishedUrl": "https://gumdrop.tistory.com/manage/posts/"
+    },
+    {
+      "id": "nE9CFbTCtY",
+      "title": "알레르기 비염 증상 완화, 이제는 스마트하게 관리하세요!",
+      "fileName": "nE9CFbTCtY.md",
+      "tags": [
+        "알레르기 비염",
+        "비염 완화",
+        "환절기 건강",
+        "콧물 재채기",
+        "알레르기 관리",
+        "생활 습관 개선",
+        "코막힘",
+        "비염 치료"
+      ],
+      "visibility": "public",
+      "status": "published",
+      "createdAt": "2026-06-22T23:34:43.701Z",
+      "updatedAt": "2026-06-22T23:35:13.426Z",
+      "lastError": "",
+      "publishedUrl": "https://gumdrop.tistory.com/manage/posts/"
+    }
+  ],
+  "autopilot": {
+    "enabled": false,
+    "topic": "",
+    "audience": "",
+    "postsPerDay": 2,
+    "hour": 8,
+    "minute": 0,
+    "visibility": "public",
+    "openai": {
+      "apiKey": "",
+      "model": "gpt-4o-mini",
+      "baseUrl": "http://127.0.0.1:10531/v1"
+    },
+    "gemini": {
+      "apiKey": "",
+      "model": "gemini-2.5-flash"
+    },
+    "lastRunResult": "✅ 알레르기 비염 증상 완화 → 발행완료 | ❌ 집에서 하는 유산소 운동 → 모든 AI 호출 실패 → Gemini: Gemini 503: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later. | OpenAI: 500 Bad Request",
+    "lastRunAt": "2026-06-22T23:35:17.200Z"
+  },
+  "keywordPlan": {
+    "month": "2026-06",
+    "topic": "",
+    "keywords": [
+      {
+        "keyword": "여름철 피부 관리 루틴",
+        "rationale": "여름 시즌에 맞춰 검색량이 급증하며, 자외선 차단제, 보습제 등 고단가 뷰티 제품 광고 클릭을 유도할 수 있는 구매 의도 키워드입니다.",
+        "used": true,
+        "usedPostId": "CLr1suYaGJ",
+        "usedAt": "2026-06-22T07:42:01.326Z"
+      },
+      {
+        "keyword": "체지방 감소 식단 추천",
+        "rationale": "다이어트 관련 키워드는 건강 보조제, 다이어트 식품 등 CPC가 높은 제품 광고와 연결되어 높은 수익을 기대할 수 있습니다.",
+        "used": true,
+        "usedPostId": "R64uR_GQC7",
+        "usedAt": "2026-06-22T07:43:01.352Z"
+      },
+      {
+        "keyword": "수면 부족 해결 방법",
+        "rationale": "현대인의 고질적인 문제로 꾸준한 검색량을 보이며, 숙면 관련 제품(매트리스, 영양제 등) 광고 노출에 유리합니다.",
+        "used": true,
+        "usedPostId": "JWhrQbPk51",
+        "usedAt": "2026-06-22T23:28:40.274Z"
+      },
+      {
+        "keyword": "알레르기 비염 증상 완화",
+        "rationale": "계절성 질환으로 관련 의약품, 공기청정기 등 고단가 제품 광고와 연결될 가능성이 높습니다.",
+        "used": true,
+        "usedPostId": "nE9CFbTCtY",
+        "usedAt": "2026-06-22T23:34:43.704Z"
+      },
+      {
+        "keyword": "집에서 하는 유산소 운동",
+        "rationale": "홈트레이닝 트렌드와 맞물려 꾸준히 인기 있으며, 운동 기구, 건강식품 등 광고 수익을 창출하기 좋습니다.",
+        "used": false
+      },
+      {
+        "keyword": "원룸 자취생 필수템 추천",
+        "rationale": "자취를 시작하는 타겟층의 구매 의도가 매우 높고, 소형 가전, 생활용품 등 다양한 제품 광고를 유치할 수 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "미니멀 라이프 시작하는 법",
+        "rationale": "라이프스타일 트렌드를 반영한 정보성 키워드로, 관련 정리 용품이나 구독 서비스 광고와 연결될 수 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "꿉꿉한 집 습기 제거 팁",
+        "rationale": "장마철 및 여름철에 검색량이 폭증하며, 제습기, 곰팡이 제거제 등 고단가 생활용품 광고 수익을 극대화할 수 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "인테리어 식물 초보 가이드",
+        "rationale": "식물 인테리어 관심층의 구매 의도가 명확하며, 식물, 화분, 원예용품 등 관련 제품 광고에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "에어프라이어 요리 레시피 모음",
+        "rationale": "에어프라이어 보급률이 높아지면서 꾸준한 검색량을 보이며, 식품 재료 및 주방용품 광고와 연결됩니다.",
+        "used": false
+      },
+      {
+        "keyword": "사회초년생 재테크 시작",
+        "rationale": "금융 관련 키워드는 CPC가 매우 높으며, 적금, 펀드, 주식 등 금융 상품 및 서비스 광고 노출에 최적화되어 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "앱테크 추천 어플 순위",
+        "rationale": "최신 트렌드 키워드로 앱 다운로드, 금융 서비스 등 다양한 제휴 광고 및 고수익 CPC 광고를 유치할 수 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "가계부 어플 비교 추천",
+        "rationale": "개인의 재정 관리에 대한 높은 관심도를 반영하며, 금융 서비스 및 유료 앱 구독 광고 수익에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "N잡러 투잡 아이디어",
+        "rationale": "부업 및 추가 수익에 대한 높은 수요를 반영하며, 재택근무 플랫폼, 온라인 강의 등 고단가 광고와 연결될 수 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "효율적인 시간 관리 노하우",
+        "rationale": "생산성 향상에 관심 있는 독자를 타겟으로 하며, 플래너, 생산성 앱 등 관련 제품 및 서비스 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "국내 여름 휴가 여행지 추천",
+        "rationale": "여름 시즌에 폭발적인 검색량을 보이며, 숙박 예약, 항공권, 여행 상품 등 CPC가 매우 높은 여행 관련 광고 수익을 극대화합니다.",
+        "used": false
+      },
+      {
+        "keyword": "해외여행 준비물 체크리스트",
+        "rationale": "해외여행을 계획하는 사람들의 필수 검색어로, 여행자 보험, 환전 서비스, 면세점 등 고수익 광고와 연결됩니다.",
+        "used": false
+      },
+      {
+        "keyword": "혼자 떠나는 제주도 여행 코스",
+        "rationale": "특정 지역 및 테마를 가진 롱테일 키워드로, 제주도 숙소, 렌터카, 액티비티 등 구체적인 여행 상품 광고에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "캠핑 초보 장비 구매 가이드",
+        "rationale": "캠핑 시즌에 맞춰 검색량이 증가하며, 텐트, 테이블, 버너 등 고단가 캠핑 용품 구매 의도를 가진 트래픽을 유치합니다.",
+        "used": false
+      },
+      {
+        "keyword": "실내 데이트 코스 추천",
+        "rationale": "날씨에 구애받지 않고 즐길 수 있는 데이트에 대한 꾸준한 수요가 있으며, 맛집, 문화시설 등 지역 기반 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "여름 제철 과일 효능",
+        "rationale": "건강과 식품에 대한 정보성 키워드로, 건강식품, 유기농 과일 등 관련 제품 광고 노출에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "샐러드 도시락 레시피",
+        "rationale": "건강식에 대한 관심이 높아지면서 꾸준히 검색되며, 신선식품 배송, 다이어트 도시락 브랜드 광고와 연결됩니다.",
+        "used": false
+      },
+      {
+        "keyword": "커피 원두 종류별 특징",
+        "rationale": "커피 애호가들의 정보성 검색어로, 원두 구매처, 커피 머신, 홈카페 용품 등 고단가 제품 광고 노출에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "건강 간식 추천 리스트",
+        "rationale": "다이어트 및 건강 관리에 관심 있는 독자들의 구매 의도가 높으며, 건강식품, 유기농 간식 광고와 연결됩니다.",
+        "used": false
+      },
+      {
+        "keyword": "여름 샌들 코디 방법",
+        "rationale": "여름 시즌 패션 관련 키워드로, 신발, 의류 브랜드 등 고단가 패션 광고 노출에 효과적입니다.",
+        "used": false
+      },
+      {
+        "keyword": "남자 올인원 로션 추천",
+        "rationale": "남성 그루밍 시장의 성장과 함께 검색량이 증가하며, 특정 브랜드의 고단가 남성 화장품 광고와 연결됩니다.",
+        "used": false
+      },
+      {
+        "keyword": "자외선 차단제 올바른 사용법",
+        "rationale": "여름철 필수품인 자외선 차단제에 대한 정보성 키워드로, 뷰티 제품 광고 및 제휴 마케팅에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "직장인 스트레스 해소법",
+        "rationale": "현대인의 공통된 고민을 다루는 정보성 키워드로, 힐링 프로그램, 멘탈 케어 앱 등 관련 서비스 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "대화 잘하는 법",
+        "rationale": "인간관계 개선에 대한 보편적인 수요를 반영하며, 자기계발 서적, 커뮤니케이션 강의 등 교육 관련 광고에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "혼자만의 시간 보내는 방법",
+        "rationale": "워라밸 및 개인의 행복을 추구하는 트렌드에 맞춰, 취미 용품, 온라인 클래스 등 다양한 광고를 유치할 수 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "스마트 워치 활용 꿀팁",
+        "rationale": "스마트 기기 사용자들의 정보성 검색어로, 관련 앱, 악세서리 등 테크 제품 광고 수익에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "아이폰 사진 정리 앱 추천",
+        "rationale": "특정 기기 사용자들의 니즈를 충족하는 키워드로, 유료 앱 구독, 클라우드 서비스 등 관련 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "새집증후군 예방 환기 방법",
+        "rationale": "이사 및 주거 환경에 대한 관심이 높은 시기에 검색량이 증가하며, 공기청정기, 친환경 건축 자재 등 고단가 광고와 연결됩니다.",
+        "used": false
+      },
+      {
+        "keyword": "전세 보증금 반환 절차",
+        "rationale": "부동산 및 법률 관련 키워드로 CPC가 매우 높으며, 법률 서비스, 이사 서비스 등 고수익 광고를 유치할 수 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "대중교통 할인카드 비교",
+        "rationale": "실생활 밀착형 키워드로, 신용카드, 체크카드 등 금융 상품 광고에 유리하며 비교 정보로 체류 시간을 늘릴 수 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "다이어트 정체기 극복 방법",
+        "rationale": "다이어트 중 많은 사람들이 겪는 문제에 대한 해결책을 찾는 키워드로, 다이어트 보조제, 전문 코칭 프로그램 등 고단가 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "만성 피로 영양제 추천",
+        "rationale": "건강에 대한 관심이 높은 독자층의 구매 의도가 명확하며, 고단가 건강기능식품 광고 수익에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "면역력 높이는 음식 리스트",
+        "rationale": "건강한 식단에 대한 정보성 키워드로, 유기농 식품, 건강 보조제 등 관련 광고 노출에 효과적입니다.",
+        "used": false
+      },
+      {
+        "keyword": "홈트레이닝 루틴 초보",
+        "rationale": "운동 초보자들을 위한 구체적인 정보성 키워드로, 홈트레이닝 기구, 운동복 등 제품 광고와 연결됩니다.",
+        "used": false
+      },
+      {
+        "keyword": "여름 감기 빨리 낫는 법",
+        "rationale": "계절성 질환에 대한 해결책을 찾는 키워드로, 의약품, 건강식품 등 관련 광고에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "층간 소음 해결 방법",
+        "rationale": "주거 문제에 대한 현실적인 고민을 다루며, 방음재, 소음 방지 매트 등 생활용품 광고 수익에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "제습기 구매 가이드",
+        "rationale": "여름철 필수 가전으로 구매 의도가 매우 높으며, 고단가 가전제품 광고 수익을 극대화할 수 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "주방 정리 수납 아이디어",
+        "rationale": "정리 정돈에 관심 있는 독자층의 정보성 검색어로, 주방용품, 수납 가구 등 제품 광고에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "베란다 텃밭 가꾸기",
+        "rationale": "취미 생활 및 친환경 트렌드를 반영하며, 씨앗, 모종, 원예 도구 등 관련 제품 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "곰팡이 제거 청소 팁",
+        "rationale": "습한 계절에 검색량이 증가하며, 곰팡이 제거제, 청소 도구 등 생활용품 광고 수익에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "스마트 조명 설치 방법",
+        "rationale": "스마트 홈에 대한 관심이 증가하면서 검색량이 늘고 있으며, 스마트 조명 기기, IoT 제품 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "퇴직연금 DC형 DB형 차이",
+        "rationale": "금융 및 노후 대비 관련 전문 정보성 키워드로, CPC가 매우 높은 연금 상품 및 재무 상담 광고에 최적화되어 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "청년 주택드림 청약통장 조건",
+        "rationale": "청년층의 주거 마련에 대한 높은 관심을 반영하며, 금융 상품 및 부동산 관련 고단가 광고에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "재택근무 효율 높이는 법",
+        "rationale": "재택근무 트렌드와 맞물려 꾸준한 검색량을 보이며, 업무용 소프트웨어, 사무용 가구 등 고단가 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "투자 초보 가이드",
+        "rationale": "투자에 대한 관심이 높은 독자층의 입문용 정보성 키워드로, 증권사 계좌 개설, 투자 교육 등 고단가 금융 광고에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "신용카드 포인트 현금화",
+        "rationale": "일상생활에 유용한 금융 정보성 키워드로, 신용카드 발급, 금융 서비스 등 고단가 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "반려동물 동반 여행 숙소",
+        "rationale": "반려동물 인구 증가에 따른 틈새시장 키워드로, 펫 프렌들리 숙소, 관련 용품 등 고단가 광고 수익에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "당일치기 근교 여행 추천",
+        "rationale": "가볍게 떠날 수 있는 여행지에 대한 꾸준한 수요가 있으며, 지역 관광 상품, 맛집 등 로컬 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "혼자서 즐기는 취미 생활",
+        "rationale": "개인의 여가 활동에 대한 정보성 키워드로, 취미 용품, 온라인 클래스 등 다양한 광고를 유치할 수 있습니다.",
+        "used": false
+      },
+      {
+        "keyword": "자전거 캠핑 준비물",
+        "rationale": "특정 테마의 아웃도어 활동 키워드로, 자전거 용품, 캠핑 장비 등 고단가 제품 광고 수익에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "국내 오션뷰 풀빌라 추천",
+        "rationale": "고급 숙박 시설에 대한 높은 구매 의도를 가진 키워드로, 고단가 숙박 예약 플랫폼 광고 수익을 극대화합니다.",
+        "used": false
+      },
+      {
+        "keyword": "비건 베이킹 레시피",
+        "rationale": "건강 및 윤리적 소비 트렌드를 반영하며, 비건 재료, 베이킹 도구 등 관련 제품 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "에어프라이어 디저트 만들기",
+        "rationale": "인기 가전제품을 활용한 레시피 키워드로, 식품 재료, 베이킹 용품 등 관련 광고에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "건강 음료 레시피",
+        "rationale": "건강하고 시원한 음료를 찾는 여름철에 특히 인기 있으며, 유기농 재료, 블렌더 등 관련 제품 광고에 적합합니다.",
+        "used": false
+      },
+      {
+        "keyword": "땀 억제제 사용법",
+        "rationale": "여름철 필수품에 대한 정보성 키워드로, 데오드란트, 땀 억제제 등 뷰티/생활용품 광고 수익에 유리합니다.",
+        "used": false
+      },
+      {
+        "keyword": "남자 여름 코디 필수템",
+        "rationale": "남성 패션에 대한 관심이 증가하면서 검색량이 늘고 있으며, 의류, 악세서리 등 고단가 패션 광고에 효과적입니다.",
+        "used": false
+      },
+      {
+        "keyword": "선글라스 고르는 팁",
+        "rationale": "여름 시즌 패션 및 시력 보호 관련 키워드로, 선글라스 브랜드, 안경점 등 고단가 제품 및 서비스 광고에 유리합니다.",
+        "used": false
+      }
+    ],
+    "createdAt": "2026-06-22T07:41:34.250Z"
+  },
+  "aiUsage": {
+    "openai": {
+      "usedTokens": 0,
+      "requests": 0,
+      "available": false,
+      "lastError": "OpenAI: 500 Bad Request",
+      "lastCheckedAt": "2026-06-22T23:35:16.868Z"
+    },
+    "gemini": {
+      "usedTokens": 29781,
+      "requests": 5,
+      "available": false,
+      "lastCheckedAt": "2026-06-22T23:35:14.434Z",
+      "lastUsedAt": "2026-06-22T23:34:43.646Z",
+      "lastError": "Gemini: Gemini 503: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later."
+    }
+  },
+  "telegram": {
+    "botToken": "",
+    "chatId": "",
+    "heartbeat": {
+      "enabled": true,
+      "intervalMinutes": 360
+    },
+    "loginAlert": {
+      "enabled": true,
+      "intervalMinutes": 60
+    },
+    "failureAlert": {
+      "enabled": true,
+      "intervalMinutes": 60
+    },
+    "intervalMinutes": 360
+  }
+}

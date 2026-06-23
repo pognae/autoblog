@@ -18,8 +18,17 @@ export const config = {
   paths: {
     /** 데이터 디렉터리 (DB, 업로드된 md) */
     data: path.join(SERVER_ROOT, "data"),
-    /** lowdb json 파일 */
+    /** lowdb json 파일 (글/키워드/사용량 등 운영 데이터) */
     db: path.join(SERVER_ROOT, "data", "db.json"),
+    /**
+     * 화면에서 입력한 "설정"만 따로 보관하는 파일.
+     * (블로그 이름 + 자동발행 설정 + 텔레그램 설정)
+     * 프로그램이 수정/재배포되어도 이 파일을 읽어 설정을 복원한다.
+     * APP_CONFIG_FILE 로 경로를 바꿀 수 있다(영속 볼륨 경로 지정용).
+     */
+    appConfig:
+      process.env.APP_CONFIG_FILE ??
+      path.join(SERVER_ROOT, "data", "app-config.json"),
     /** 업로드/작성된 마크다운 원본 저장 위치 */
     posts: path.join(SERVER_ROOT, "data", "posts"),
     /** 발행 시 첨부 이미지 임시 위치 */
@@ -58,6 +67,15 @@ export const config = {
     apiKey: process.env.GEMINI_API_KEY ?? "",
     /** 기본 모델 */
     model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+  },
+
+  telegram: {
+    /** 텔레그램 봇 토큰 (@BotFather 발급). 비우면 알림 비활성화. */
+    botToken: process.env.TELEGRAM_BOT_TOKEN ?? "",
+    /** 알림을 받을 채팅 ID (개인/그룹). */
+    chatId: process.env.TELEGRAM_CHAT_ID ?? "",
+    /** 정기 상태 점검/알림 주기(분). 기본 360분(6시간). */
+    intervalMinutes: Number(process.env.TELEGRAM_NOTIFY_MINUTES ?? 360),
   },
 
   playwright: {

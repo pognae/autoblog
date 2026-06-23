@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "blogName": "my-blog",
+  "autopilot": {
+    "enabled": false,
+    "topic": "",
+    "audience": "",
+    "postsPerDay": 1,
+    "hour": 9,
+    "minute": 0,
+    "visibility": "public",
+    "openai": {
+      "apiKey": "",
+      "model": "gpt-4o-mini",
+      "baseUrl": ""
+    },
+    "gemini": {
+      "apiKey": "",
+      "model": "gemini-2.5-flash"
+    }
+  },
+  "telegram": {
+    "botToken": "",
+    "chatId": "",
+    "heartbeat": { "enabled": true, "intervalMinutes": 360 },
+    "loginAlert": { "enabled": true, "intervalMinutes": 60 },
+    "failureAlert": { "enabled": true, "intervalMinutes": 60 }
+  },
+  "savedAt": "2026-01-01T00:00:00.000Z"
+}

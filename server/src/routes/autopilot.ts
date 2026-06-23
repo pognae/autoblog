@@ -3,9 +3,11 @@ import { z } from "zod";
 import { db } from "../db.js";
 import {
   autopilotStatus,
+  publishExistingNow,
   regenerateKeywordPlan,
   runNow,
 } from "../autopilot.js";
+import { savePersistedConfig } from "../config.store.js";
 import type { AutopilotConfig } from "../types.js";
 
 export const autopilotRouter = Router();
@@ -83,6 +85,7 @@ autopilotRouter.put("/", async (req, res) => {
   }
 
   await db.write();
+  savePersistedConfig();
   res.json({ config: publicConfig(cfg), plan: db.data.keywordPlan });
 });
 
@@ -98,10 +101,22 @@ autopilotRouter.post("/keywords", async (_req, res) => {
   }
 });
 
-// 지금 1회 실행 (글 생성 + 발행)
+// 지금 1회 실행 (AI 로 새 글 생성 + 발행)
 autopilotRouter.post("/run", async (_req, res) => {
   try {
     const summary = await runNow();
+    res.json({ summary, config: publicConfig(db.data.autopilot) });
+  } catch (err) {
+    res
+      .status(400)
+      .json({ error: err instanceof Error ? err.message : "실행 실패" });
+  }
+});
+
+// 지금 즉시 발행 (AI 호출 없이 이미 만들어진 미발행 글을 postsPerDay 개 발행)
+autopilotRouter.post("/run-existing", async (_req, res) => {
+  try {
+    const summary = await publishExistingNow();
     res.json({ summary, config: publicConfig(db.data.autopilot) });
   } catch (err) {
     res

@@ -7,7 +7,9 @@ import {
   DEFAULT_AI_USAGE,
   DEFAULT_AUTOPILOT,
   DEFAULT_DB,
+  DEFAULT_TELEGRAM,
   type DbSchema,
+  type TelegramConfig,
 } from "./types.js";
 
 /** 필요한 데이터 디렉터리를 모두 생성한다. */
@@ -70,6 +72,24 @@ export async function initDb(): Promise<void> {
     openai: { ...structuredClone(DEFAULT_AI_PROVIDER_STATE), ...(usage.openai ?? {}) },
     gemini: { ...structuredClone(DEFAULT_AI_PROVIDER_STATE), ...(usage.gemini ?? {}) },
   };
+
+  // 텔레그램 설정 보정 (UI 입력값 저장 위치) + 구버전(단일 intervalMinutes) 마이그레이션
+  const oldT = (db.data.telegram ?? {}) as Partial<TelegramConfig> & {
+    intervalMinutes?: number;
+  };
+  const base = structuredClone(DEFAULT_TELEGRAM);
+  const mergedTelegram: TelegramConfig = {
+    botToken: oldT.botToken ?? base.botToken,
+    chatId: oldT.chatId ?? base.chatId,
+    heartbeat: { ...base.heartbeat, ...(oldT.heartbeat ?? {}) },
+    loginAlert: { ...base.loginAlert, ...(oldT.loginAlert ?? {}) },
+    failureAlert: { ...base.failureAlert, ...(oldT.failureAlert ?? {}) },
+  };
+  // 구버전 평면 intervalMinutes 가 있으면 정기 보고(heartbeat) 주기로 이전
+  if (typeof oldT.intervalMinutes === "number" && !oldT.heartbeat) {
+    mergedTelegram.heartbeat.intervalMinutes = oldT.intervalMinutes;
+  }
+  db.data.telegram = mergedTelegram;
 
   await db.write();
 }

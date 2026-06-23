@@ -1,10 +1,33 @@
 import { useEffect, useState } from "react";
-import { api, type Settings } from "../api.ts";
+import {
+  api,
+  type MonitorStatus,
+  type Settings,
+  type TelegramChannel,
+} from "../api.ts";
 import { formatDateTime } from "../lib.ts";
+
+type ChannelKey = "heartbeat" | "loginAlert" | "failureAlert";
+
+const CHANNEL_LABELS: Record<ChannelKey, { title: string; desc: string }> = {
+  heartbeat: { title: "정기 상태 보고", desc: "서버/로그인/글 통계 요약" },
+  loginAlert: { title: "로그인 만료 경고", desc: "세션이 풀리면 경고" },
+  failureAlert: { title: "발행 실패 알림", desc: "실패 글이 있으면 알림 + 재발행" },
+};
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [blogName, setBlogName] = useState("");
+  const [monitor, setMonitor] = useState<MonitorStatus | null>(null);
+  const [tgToken, setTgToken] = useState("");
+  const [tgChatId, setTgChatId] = useState("");
+  const [channels, setChannels] = useState<Record<ChannelKey, TelegramChannel>>(
+    {
+      heartbeat: { enabled: true, intervalMinutes: 360 },
+      loginAlert: { enabled: true, intervalMinutes: 60 },
+      failureAlert: { enabled: true, intervalMinutes: 60 },
+    },
+  );
   const [busy, setBusy] = useState<string>("");
   const [msg, setMsg] = useState("");
 
@@ -14,9 +37,24 @@ export default function SettingsPage() {
       setBlogName(s.blogName);
     });
 
+  const loadMonitor = () =>
+    api.getMonitor().then((m) => {
+      setMonitor(m);
+      setTgChatId(m.chatId);
+      setChannels({
+        heartbeat: m.heartbeat,
+        loginAlert: m.loginAlert,
+        failureAlert: m.failureAlert,
+      });
+    });
+
   useEffect(() => {
     load();
+    loadMonitor().catch(() => {});
   }, []);
+
+  const patchChannel = (key: ChannelKey, p: Partial<TelegramChannel>) =>
+    setChannels((c) => ({ ...c, [key]: { ...c[key], ...p } }));
 
   const saveBlogName = async () => {
     setBusy("save");
@@ -55,6 +93,50 @@ export default function SettingsPage() {
       setMsg(s.loggedIn ? "세션이 유효합니다." : "세션이 만료되었습니다. 다시 로그인하세요.");
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "확인 실패");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const saveTelegram = async () => {
+    setBusy("tgSave");
+    setMsg("");
+    try {
+      const m = await api.updateMonitor({
+        botToken: tgToken || undefined, // 비우면 기존 토큰 유지
+        chatId: tgChatId.trim(),
+        heartbeat: channels.heartbeat,
+        loginAlert: channels.loginAlert,
+        failureAlert: channels.failureAlert,
+      });
+      setMonitor(m);
+      setTgChatId(m.chatId);
+      setChannels({
+        heartbeat: m.heartbeat,
+        loginAlert: m.loginAlert,
+        failureAlert: m.failureAlert,
+      });
+      setTgToken("");
+      setMsg("텔레그램 설정을 저장했습니다.");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "저장 실패");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const testTelegram = async () => {
+    setBusy("telegram");
+    setMsg("");
+    try {
+      const r = await api.testMonitor();
+      setMsg(
+        r.ok
+          ? "텔레그램으로 테스트 알림을 보냈습니다. 메시지를 확인하세요."
+          : "전송에 실패했습니다. 토큰/채팅 ID 를 확인하세요.",
+      );
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "전송 실패");
     } finally {
       setBusy("");
     }
@@ -195,11 +277,156 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium">텔레그램 상태 알림</h3>
+          {monitor && (
+            <span
+              className={`rounded-md px-2 py-0.5 text-xs font-medium ${
+                monitor.configured
+                  ? "bg-emerald-500/20 text-emerald-300"
+                  : "bg-slate-600/40 text-slate-300"
+              }`}
+            >
+              {monitor.configured ? "설정됨" : "미설정"}
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-slate-400">
+          일정 주기마다 <b>로그인 여부·서버 상태·글 통계</b>를 점검해 텔레그램으로 알립니다.
+          아래에 직접 입력해 저장하세요. (<b>@BotFather</b> 로 봇 생성 → 토큰, 봇과 대화 시작 후
+          <code> getUpdates </code>로 채팅 ID 확인)
+          {monitor?.fromEnv && (
+            <span className="mt-1 block text-amber-400">
+              ※ 현재 환경변수(.env)로 설정돼 있습니다. 아래에 입력해 저장하면 입력값이 우선합니다.
+            </span>
+          )}
+        </p>
+
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-slate-300">
+            봇 토큰 {monitor?.hasToken ? "(설정됨)" : "(미설정)"}
+          </span>
+          <input
+            type="password"
+            value={tgToken}
+            onChange={(e) => setTgToken(e.target.value)}
+            placeholder={monitor?.hasToken ? "변경 시에만 입력 (지우려면 - 입력)" : "123456:ABC-..."}
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 outline-none focus:border-indigo-500"
+          />
+        </label>
+
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-slate-300">
+            채팅 ID
+          </span>
+          <input
+            value={tgChatId}
+            onChange={(e) => setTgChatId(e.target.value)}
+            placeholder="123456789"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 outline-none focus:border-indigo-500"
+          />
+        </label>
+
+        {/* 알림 종류별 on/off 스위치 + 개별 주기 */}
+        <div className="space-y-2">
+          <span className="block text-sm font-medium text-slate-300">
+            알림 종류별 설정
+          </span>
+          {(["heartbeat", "loginAlert", "failureAlert"] as ChannelKey[]).map(
+            (key) => {
+              const ch = channels[key];
+              return (
+                <div
+                  key={key}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/40 p-3"
+                >
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">
+                      {CHANNEL_LABELS[key].title}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {CHANNEL_LABELS[key].desc}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <label className="flex items-center gap-1 text-xs text-slate-400">
+                      주기
+                      <input
+                        type="number"
+                        min={1}
+                        max={1440}
+                        value={ch.intervalMinutes}
+                        disabled={!ch.enabled}
+                        onChange={(e) =>
+                          patchChannel(key, {
+                            intervalMinutes: Number(e.target.value),
+                          })
+                        }
+                        className="w-16 rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-right outline-none focus:border-indigo-500 disabled:opacity-40"
+                      />
+                      분
+                    </label>
+                    <Toggle
+                      checked={ch.enabled}
+                      onChange={(v) => patchChannel(key, { enabled: v })}
+                    />
+                  </div>
+                </div>
+              );
+            },
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            disabled={busy === "tgSave"}
+            onClick={saveTelegram}
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium hover:bg-indigo-500 disabled:opacity-50"
+          >
+            {busy === "tgSave" ? "저장 중..." : "텔레그램 설정 저장"}
+          </button>
+          <button
+            disabled={busy === "telegram" || !monitor?.configured}
+            onClick={testTelegram}
+            className="rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800 disabled:opacity-50"
+          >
+            {busy === "telegram" ? "전송 중..." : "테스트 알림 보내기"}
+          </button>
+        </div>
+      </section>
+
       {msg && (
         <p className="rounded-lg border border-slate-800 bg-slate-900/50 p-3 text-sm text-slate-300">
           {msg}
         </p>
       )}
     </div>
+  );
+}
+
+function Toggle({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+        checked ? "bg-emerald-500" : "bg-slate-600"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
+          checked ? "left-[22px]" : "left-0.5"
+        }`}
+      />
+    </button>
   );
 }

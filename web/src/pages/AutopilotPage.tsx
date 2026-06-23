@@ -104,11 +104,32 @@ export default function AutopilotPage() {
   };
 
   const runNow = async () => {
-    if (!confirm(`지금 AI 로 글 ${cfg.postsPerDay}개를 생성해 발행할까요?`)) return;
+    if (!confirm(`지금 AI 로 새 글 ${cfg.postsPerDay}개를 생성해 발행할까요?`)) return;
     setBusy("run");
-    setMsg("글 생성 및 발행 중... (브라우저 창이 뜰 수 있습니다)");
+    setMsg("AI 글 생성 및 발행 중... (브라우저 창이 뜰 수 있습니다)");
     try {
       const r = await api.runAutopilot();
+      setMsg(`실행 결과: ${r.summary}`);
+      load();
+      loadStatus();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "실행 실패");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const publishExisting = async () => {
+    if (
+      !confirm(
+        `AI 호출 없이, 이미 만들어진 미발행 글 중 ${cfg.postsPerDay}개를 지금 발행할까요?`,
+      )
+    )
+      return;
+    setBusy("runExisting");
+    setMsg("기존 글 발행 중... (브라우저 창이 뜰 수 있습니다)");
+    try {
+      const r = await api.runAutopilotExisting();
       setMsg(`실행 결과: ${r.summary}`);
       load();
       loadStatus();
@@ -149,20 +170,21 @@ export default function AutopilotPage() {
         자동으로 사용하며, 한쪽이 실패하면 다른 쪽으로 전환합니다.
       </p>
 
-      {/* 수동 실행: 예약 시각과 무관하게 지금 바로 글 생성→발행 */}
+      {/* 수동 실행: 예약 시각과 무관하게 이미 만들어진 글을 바로 발행 (AI 호출 없음) */}
       <section className="flex flex-col gap-3 rounded-xl border border-emerald-700/40 bg-emerald-500/5 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="font-medium text-emerald-200">지금 즉시 발행</h3>
           <p className="mt-1 text-sm text-slate-400">
-            예약 시각과 상관없이, 버튼을 누르면 바로 글 <b>{cfg.postsPerDay}개</b>를 생성해 발행합니다.
+            예약 시각·AI 와 무관하게, <b>이미 만들어진 미발행 글</b> 중 오래된 순으로
+            <b> {cfg.postsPerDay}개</b>를 바로 발행합니다. (새 글 생성 없음)
           </p>
         </div>
         <button
-          disabled={busy === "run"}
-          onClick={runNow}
+          disabled={busy === "runExisting"}
+          onClick={publishExisting}
           className="shrink-0 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
         >
-          {busy === "run" ? "발행 중..." : "지금 즉시 발행"}
+          {busy === "runExisting" ? "발행 중..." : "지금 즉시 발행"}
         </button>
       </section>
 
@@ -369,7 +391,7 @@ export default function AutopilotPage() {
               onClick={runNow}
               className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium hover:bg-emerald-500 disabled:opacity-50"
             >
-              {busy === "run" ? "실행 중..." : "지금 1회 실행"}
+              {busy === "run" ? "생성 중..." : "AI 생성 후 1회 실행"}
             </button>
           </div>
         </div>

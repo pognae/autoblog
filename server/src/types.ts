@@ -117,12 +117,35 @@ export interface AiUsage {
   gemini: AiProviderState;
 }
 
+/** 텔레그램 알림 종류 (채널) — 각각 on/off + 개별 주기(분) */
+export interface TelegramChannel {
+  /** 이 종류의 알림을 보낼지 */
+  enabled: boolean;
+  /** 점검/전송 주기(분) */
+  intervalMinutes: number;
+}
+
+/** 텔레그램 상태 알림 설정 (UI 에서 입력, env 보다 우선) */
+export interface TelegramConfig {
+  /** @BotFather 봇 토큰 */
+  botToken: string;
+  /** 알림 받을 채팅 ID */
+  chatId: string;
+  /** 정기 상태 보고 (서버/로그인/글 통계 요약) */
+  heartbeat: TelegramChannel;
+  /** 로그인 세션 만료 경고 */
+  loginAlert: TelegramChannel;
+  /** 발행 실패 글 알림 */
+  failureAlert: TelegramChannel;
+}
+
 export interface DbSchema {
   settings: Settings;
   posts: Post[];
   autopilot: AutopilotConfig;
   keywordPlan: KeywordPlan | null;
   aiUsage: AiUsage;
+  telegram: TelegramConfig;
 }
 
 export const DEFAULT_AUTOPILOT: AutopilotConfig = {
@@ -149,6 +172,14 @@ export const DEFAULT_AI_USAGE: AiUsage = {
   gemini: structuredClone(DEFAULT_AI_PROVIDER_STATE),
 };
 
+export const DEFAULT_TELEGRAM: TelegramConfig = {
+  botToken: "",
+  chatId: "",
+  heartbeat: { enabled: true, intervalMinutes: 360 },
+  loginAlert: { enabled: true, intervalMinutes: 60 },
+  failureAlert: { enabled: true, intervalMinutes: 60 },
+};
+
 export const DEFAULT_DB: DbSchema = {
   settings: {
     blogName: "",
@@ -158,4 +189,5 @@ export const DEFAULT_DB: DbSchema = {
   autopilot: structuredClone(DEFAULT_AUTOPILOT),
   keywordPlan: null,
   aiUsage: structuredClone(DEFAULT_AI_USAGE),
+  telegram: structuredClone(DEFAULT_TELEGRAM),
 };

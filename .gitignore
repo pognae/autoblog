@@ -2,10 +2,15 @@ node_modules/
 dist/
 *.log
 
-# 로컬 데이터 (글, DB, 브라우저 세션)
-server/data/
+# 로컬 데이터: 글감(posts)·DB는 배포에 포함, 설정(app-config)은 API키 포함으로 제외
+server/data/*
+!server/data/posts/
+!server/data/db.json
+!server/data/app-config.example.json
 server/.session/
 server/screenshots/
+# app-config.json — 화면 입력 설정(API키·봇토큰 포함). git/이미지에 올리지 않음
+server/data/app-config.json
 
 # 환경변수
 .env

@@ -87,6 +87,22 @@ export interface AutopilotState {
   status: { schedulerRunning: boolean };
 }
 
+export interface TelegramChannel {
+  enabled: boolean;
+  intervalMinutes: number;
+}
+
+export interface MonitorStatus {
+  configured: boolean;
+  running: boolean;
+  hasToken: boolean;
+  chatId: string;
+  fromEnv: boolean;
+  heartbeat: TelegramChannel;
+  loginAlert: TelegramChannel;
+  failureAlert: TelegramChannel;
+}
+
 async function http<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -227,6 +243,28 @@ export const api = {
     http<{ summary: string; config: AutopilotConfig }>("/api/autopilot/run", {
       method: "POST",
     }),
+  /** AI 호출 없이 이미 만들어진 미발행 글을 postsPerDay 개 발행 */
+  runAutopilotExisting: () =>
+    http<{ summary: string; config: AutopilotConfig }>(
+      "/api/autopilot/run-existing",
+      { method: "POST" },
+    ),
+
+  // monitor (텔레그램 알림)
+  getMonitor: () => http<MonitorStatus>("/api/monitor"),
+  updateMonitor: (data: {
+    botToken?: string;
+    chatId?: string;
+    heartbeat?: Partial<TelegramChannel>;
+    loginAlert?: Partial<TelegramChannel>;
+    failureAlert?: Partial<TelegramChannel>;
+  }) =>
+    http<MonitorStatus>("/api/monitor", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  testMonitor: () =>
+    http<{ ok: boolean }>("/api/monitor/test", { method: "POST" }),
 
   // scheduler
   getScheduler: () => http<{ running: boolean }>("/api/scheduler"),

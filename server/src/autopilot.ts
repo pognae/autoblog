@@ -144,7 +144,7 @@ export async function runDaily(cfg: AutopilotConfig): Promise<string> {
   return summary;
 }
 
-/** 수동 1회 실행 (시간 게이트 무시). lastRunDate 는 건드리지 않음. */
+/** 수동 1회 실행 (시간 게이트 무시) — AI 로 새 글을 생성해 발행. lastRunDate 는 건드리지 않음. */
 export async function runNow(): Promise<string> {
   const cfg = db.data.autopilot;
   if (running) return "이미 실행 중입니다.";
@@ -154,6 +154,59 @@ export async function runNow(): Promise<string> {
     cfg.lastRunResult = summary;
     cfg.lastRunAt = new Date().toISOString();
     await db.write();
+    return summary;
+  } finally {
+    running = false;
+  }
+}
+
+/**
+ * 지금 즉시 발행 — AI 를 다시 호출하지 않고, 이미 만들어진(미발행) 글 중
+ * 오래된 순으로 postsPerDay 개를 골라 발행한다.
+ * 대상 상태: draft(초안) / scheduled(예약) / failed(실패). published/publishing 제외.
+ */
+export async function publishExistingNow(): Promise<string> {
+  const cfg = db.data.autopilot;
+  if (running) return "이미 실행 중입니다.";
+  running = true;
+  try {
+    const candidates = db.data.posts
+      .filter(
+        (p) =>
+          p.status === "draft" ||
+          p.status === "scheduled" ||
+          p.status === "failed",
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      )
+      .slice(0, cfg.postsPerDay);
+
+    if (candidates.length === 0) {
+      const msg =
+        "발행할 미발행 글이 없습니다. (새 글/업로드로 글을 먼저 만들어 두세요)";
+      cfg.lastRunResult = msg;
+      cfg.lastRunAt = new Date().toISOString();
+      await db.write();
+      return msg;
+    }
+
+    const results: string[] = [];
+    for (const post of candidates) {
+      console.log(`[autopilot] 즉시 발행(기존 글): "${post.title}"`);
+      const pub = await publishPostById(post.id);
+      results.push(
+        pub.ok
+          ? `✅ ${post.title} → 발행완료`
+          : `⚠️ ${post.title} → 발행실패(${pub.error})`,
+      );
+    }
+    const summary = results.join(" | ");
+    cfg.lastRunResult = summary;
+    cfg.lastRunAt = new Date().toISOString();
+    await db.write();
+    console.log(`[autopilot] 즉시 발행 완료: ${summary}`);
     return summary;
   } finally {
     running = false;

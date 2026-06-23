@@ -15,15 +15,17 @@
 6. [설치 방법 (상세)](#설치-방법-상세)
 7. [실행 방법 (상세)](#실행-방법-상세)
 8. [클라우드 배포 (cloudtype 등 24시간 자동 발행)](#클라우드-배포-cloudtype-등-24시간-자동-발행)
-9. [ChatGPT 계정 OAuth(openai-oauth)로 OpenAI 쓰기](#chatgpt-계정-oauthopenai-oauth로-openai-쓰기)
-10. [사용법 (단계별)](#사용법-단계별)
-11. [Markdown 작성 규칙](#markdown-작성-규칙)
-12. [환경변수 설정](#환경변수-설정)
-13. [REST API 명세](#rest-api-명세)
-14. [데이터 저장 위치](#데이터-저장-위치)
-15. [문제 해결 (트러블슈팅)](#문제-해결-트러블슈팅)
-16. [주의사항 / 한계](#주의사항--한계)
-17. [작업 기록 (변경 이력)](#작업-기록-변경-이력)
+9. [텔레그램 상태 알림 설정](#텔레그램-상태-알림-설정)
+10. [ChatGPT 계정 OAuth(openai-oauth)로 OpenAI 쓰기](#chatgpt-계정-oauthopenai-oauth로-openai-쓰기)
+11. [사용법 (단계별)](#사용법-단계별)
+12. [Markdown 작성 규칙](#markdown-작성-규칙)
+13. [환경변수 설정](#환경변수-설정)
+14. [REST API 명세](#rest-api-명세)
+15. [데이터 저장 위치](#데이터-저장-위치)
+16. [설정 영속화 (화면 입력 설정 파일 저장)](#설정-영속화-화면-입력-설정-파일-저장)
+17. [문제 해결 (트러블슈팅)](#문제-해결-트러블슈팅)
+18. [주의사항 / 한계](#주의사항--한계)
+19. [작업 기록 (변경 이력)](#작업-기록-변경-이력)
 
 ---
 
@@ -145,6 +147,8 @@ npm run dev
 - **REST API**: 글, 설정, 스케줄러 제어 엔드포인트
 - **파일 업로드**: `.md` 파일 다중 업로드로 글 일괄 생성 (`multer`)
 - **입력 검증**: `zod` 스키마 기반
+- **실패 글 자동 재발행 (`publisher.service.ts`)**: 발행에 실패(`failed`)했거나 서버가 도중에 멈춰 `publishing` 으로 남은 글을, **서버 재시작 / 재로그인 / 세션 가져오기 / 세션 확인 / 정기 점검** 시점에 오래된 순으로 순차 재발행. 세션 만료가 감지되면 즉시 중단(이후 글도 어차피 실패)하고 다음 로그인 때 재시도.
+- **텔레그램 상태 알림 (`notifier.ts`)**: 알림을 **3종류**(정기 상태 보고 / 로그인 만료 경고 / 발행 실패 알림)로 나눠 **종류별 on/off 스위치 + 개별 주기(분)** 를 설정할 수 있습니다. 1분 단위 마스터 틱이 각 종류의 주기 도래 여부를 판정해 전송하며, 실패 글이 있으면 자동 재발행을 트리거합니다.
 
 ### 자동 발행 (AI 오토파일럿)
 - AI(ChatGPT/Gemini)가 매달 수익형 키워드를 선정하고, 매일 지정 시각(기본 오전 10시)에 `postsPerDay`(기본 2개)만큼 글(제목·본문·태그)을 생성해 자동 발행
@@ -152,6 +156,10 @@ npm run dev
 - 제공자별 **누적 사용 토큰·사용 가능 여부** 표시 (잔액 API 부재로 사용량 기반)
 - 월간 키워드 계획 저장/소진 시 자동 보충, 사용 키워드 추적
 - 멀티 프로바이더 연동(`ai.ts`), 시각 기반 스케줄러(`autopilot.ts`), 설정/키워드/즉시실행/AI상태 REST API
+- **실행 방식 2가지 구분**:
+  - **AI 생성 후 1회 실행** (`/api/autopilot/run`): AI 로 새 글을 생성해 발행 (매일 스케줄과 동일 동작).
+  - **지금 즉시 발행** (`/api/autopilot/run-existing`): **AI 호출 없이** 이미 만들어진 미발행 글(초안/예약/실패) 중 오래된 순으로 `postsPerDay` 개를 발행. AI 토큰을 아끼고 미리 만들어 둔 글을 빠르게 올릴 때 사용.
+- **예약 시각 판정**: 정각 일치(`===`)가 아니라 "예약 시각 경과(`>=`) + 오늘 미실행" 으로 판정 → 그 시각에 서버가 꺼져 있었어도 켜진 뒤 그날 안에 1회 따라잡아(catch-up) 실행.
 
 ### 프론트엔드 (`web/`)
 - **글 목록 페이지**: 상태 배지(초안/예약됨/발행 중/발행 완료/실패), 즉시 발행/편집/삭제, 8초마다 자동 갱신, 발행 URL·실패 사유 표시
@@ -192,8 +200,9 @@ autoblog2/
 ├── server/                 # 백엔드
 │   ├── .env.example        # 환경변수 예시
 │   └── src/
-│       ├── index.ts            # 서버 엔트리 (Express 라우팅, 스케줄러 시작)
+│       ├── index.ts            # 서버 엔트리 (라우팅, 스케줄러/모니터 시작, web/dist 서빙, 시작 시 실패글 재발행)
 │       ├── config.ts           # 설정/경로 정의
+│       ├── config.store.ts     # 화면 입력 설정의 파일 영속화(app-config.json) 로드/저장
 │       ├── types.ts            # 공용 타입 (Post, Settings, DB 스키마)
 │       ├── db.ts               # lowdb 초기화/디렉터리 생성
 │       ├── markdown.ts         # md 파싱 + HTML 변환
@@ -202,13 +211,15 @@ autoblog2/
 │       ├── tistory.ts          # Playwright 자동화 (로그인/세션/발행)
 │       ├── publisher.service.ts# 발행 오케스트레이션(직렬화)
 │       ├── ai.ts               # AI(OpenAI/Gemini) 키워드/글 생성 + failover
-│       ├── autopilot.ts        # 매일 자동 생성·발행 스케줄러
+│       ├── autopilot.ts        # 매일 자동 생성·발행 스케줄러 + 즉시발행(기존글)
+│       ├── notifier.ts         # 텔레그램 상태 알림 + 정기 점검 모니터
 │       └── routes/
 │           ├── posts.ts        # /api/posts
-│           ├── settings.ts     # /api/settings
+│           ├── settings.ts     # /api/settings (+ 세션 내보내기/가져오기)
 │           ├── scheduler.ts    # /api/scheduler
-│           ├── autopilot.ts    # /api/autopilot
-│           └── ai.ts           # /api/ai (상태/사용량)
+│           ├── autopilot.ts    # /api/autopilot (run / run-existing)
+│           ├── ai.ts           # /api/ai (상태/사용량)
+│           └── monitor.ts      # /api/monitor (텔레그램 상태/테스트)
 └── web/                    # 프론트엔드
     ├── index.html
     ├── vite.config.ts      # /api -> localhost:4000 프록시
@@ -324,10 +335,12 @@ npm start            # 백엔드 실행 (dist/index.js)
      | `GEMINI_MODEL` | `gemini-2.5-flash` |
      | `PW_HEADLESS` | `false` (기본값 유지 권장) |
 
-   - **영속 볼륨(중요)**: 무료 컨테이너는 재배포/재시작 시 디스크가 초기화됩니다. 로그인 세션과 글 데이터를 유지하려면 **볼륨**을 다음 경로에 연결하세요.
+   - **글감·DB는 이미지/git에 함께 배포됩니다**: `server/data/posts/*.md`(글감), `server/data/db.json`(글 메타데이터)이 포함되어 배포 시 로컬에서 만든 글감이 그대로 올라갑니다.
+   - **`app-config.json`은 git/이미지에 포함하지 않습니다**: 이 파일에는 **OpenAI·Gemini API 키·텔레그램 봇 토큰**이 들어가 GitHub Push Protection에 걸립니다. API 키는 **환경변수**(`GEMINI_API_KEY`, `OPENAI_API_KEY` 등)로 주입하고, 화면 설정(블로그 이름·자동발행·텔레그램)은 배포 후 대시보드에서 다시 저장하거나 **영속 볼륨**으로 유지하세요.
+   - **영속 볼륨(선택)**: 무료 컨테이너는 재배포/재시작 시 디스크가 초기화됩니다. **운영 중 서버에서 새로 만든 글/세션/설정**을 유지하려면 볼륨을 연결하세요.
      - `/app/server/.session` (로그인 세션 `state.json`)
-     - `/app/server/data` (글/DB)
-     > 볼륨을 안 붙이면 재시작할 때마다 아래 5번(세션 가져오기)을 다시 해야 합니다.
+     - `/app/server/data` (글/DB + **`app-config.json`** — 화면 입력 설정. API 키는 env 로, 나머지 설정은 이 볼륨에 저장)
+     > `/app/server/data` 볼륨을 붙이면 빈 볼륨이 이미지에 구운 글감(`posts/`, `db.json`)을 가릴 수 있습니다. 이미지에 구운 글감을 그대로 쓰려면 볼륨 대신 git 에 포함된 데이터를 사용하세요.
 
 3. **배포 완료 후 대시보드 접속** → **설정 탭에서 블로그 이름 저장**.
 
@@ -355,6 +368,46 @@ docker build -t autoblog .
 docker run -p 3000:3000 -e GEMINI_API_KEY=... autoblog
 # http://localhost:3000 접속 → 설정에서 세션 가져오기
 ```
+
+---
+
+## 텔레그램 상태 알림 설정
+
+서버(특히 클라우드)에 올려두고 **로그인 만료/발행 실패**를 놓치지 않도록, 일정 주기로 상태를 텔레그램으로 받아볼 수 있습니다.
+
+### 봇 만들고 토큰·채팅 ID 얻기
+
+1. 텔레그램에서 **@BotFather** 와 대화 → `/newbot` → 안내대로 봇 생성 → **봇 토큰**(`123456:ABC-...`)을 받습니다.
+2. 방금 만든 **내 봇과 대화를 시작**(아무 메시지나 전송)합니다.
+3. 브라우저에서 `https://api.telegram.org/bot<봇토큰>/getUpdates` 접속 → 응답 JSON 의 `result[].message.chat.id` 값이 **채팅 ID** 입니다.
+
+### 적용 (화면 입력 권장)
+
+- 대시보드 **설정 탭 → 텔레그램 상태 알림** 에서 **봇 토큰 · 채팅 ID** 를 입력하고 **"텔레그램 설정 저장"** 을 누릅니다.
+  - 저장 즉시 모니터가 재시작되어 새 설정이 적용됩니다(서버 재시작 불필요).
+  - 토큰은 화면에 다시 노출되지 않습니다. 변경할 때만 입력하고, 비우면 기존 토큰이 유지됩니다(지우려면 `-` 입력).
+  - **"테스트 알림 보내기"** 로 즉시 동작을 확인할 수 있습니다.
+- 입력값은 `server/data/db.json` 과 `app-config.json` 에 저장되어 재시작/재배포 후에도 유지됩니다.
+
+### 알림 종류별 스위치 + 개별 주기
+
+같은 패널의 **"알림 종류별 설정"** 에서 종류마다 **on/off 스위치**와 **주기(분)** 를 따로 지정합니다.
+
+| 종류 | 설명 | 기본 주기 |
+| --- | --- | --- |
+| **정기 상태 보고** (`heartbeat`) | 서버 정상 여부·로그인 상태·글 통계(예약/실패/완료) 요약 보고 | 360분 |
+| **로그인 만료 경고** (`loginAlert`) | 주기마다 세션을 점검해, 로그아웃 상태면 경고(복구되면 알림) | 60분 |
+| **발행 실패 알림** (`failureAlert`) | 주기마다 실패 글을 점검해 건수를 알리고 자동 재발행 시도 | 60분 |
+
+- 스위치를 끄면 해당 종류는 전송되지 않습니다. 각 주기는 1~1440분 사이로 설정합니다.
+- 내부적으로는 1분마다 도는 마스터 틱이 종류별 주기 도래 여부를 판정해 보냅니다. (세션 점검은 한 틱당 1회만 수행해 중복 브라우저 실행을 막습니다)
+
+> (선택) 환경변수 폴백: 토큰/채팅 ID는 화면 입력이 비어 있을 때만 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`(`server/.env` 또는 클라우드 환경변수)가 사용됩니다. 종류별 on/off·주기는 화면(설정 파일) 값만 사용합니다. (`TELEGRAM_NOTIFY_MINUTES` 는 구버전 단일 주기용으로, 이제 화면 설정의 정기 보고 주기로 대체됩니다.)
+
+### 알림 내용
+
+- 서버 동작 여부, **로그인 여부**(실제 세션 점검), 자동 발행 ON/OFF, **예약 대기/실패/발행완료 글 수**, 점검 시각.
+- 로그인이 풀리면 즉시 별도 경고를 보내고, 점검 시 실패 글이 있으면 자동으로 재발행을 시도합니다.
 
 ---
 
@@ -437,8 +490,11 @@ npm run oauth:proxy
 1. **자동 발행 탭** 으로 이동.
 2. **OpenAI API 키** 입력(또는 `.env` 의 `OPENAI_API_KEY`), **블로그 주제/니치**, 타깃 독자, 하루 발행 수, 실행 시각, 공개 범위, 모델을 설정하고 **설정 저장**.
 3. **키워드 생성/재생성** 으로 이번 달 키워드 계획을 만든 뒤 내용을 확인.
-4. **지금 1회 실행** 으로 즉시 테스트(글 N개 생성→발행). 결과 요약이 표시됩니다.
-5. 상단의 **자동 발행 켜짐** 토글을 켜면, 매일 지정 시각에 자동으로 실행됩니다.
+4. 즉시 실행은 두 가지입니다.
+   - **지금 즉시 발행**(상단 녹색 버튼): AI 호출 없이 **이미 만들어 둔 미발행 글**(초안/예약/실패) 중 오래된 순으로 `하루 발행 수`만큼 바로 발행. (AI 토큰 절약)
+   - **AI 생성 후 1회 실행**(키워드 계획 옆 버튼): AI 로 새 글을 생성해 발행(매일 스케줄과 동일).
+5. 상단의 **자동 발행 켜짐** 토글을 켠 뒤 **설정 저장**하면(체크만 하고 저장 안 하면 적용 안 됨), 매일 지정 시각에 자동으로 실행됩니다.
+   - 그 시각에 서버가 꺼져 있었더라도, 서버가 켜지면 그날 안에 한 번 따라잡아(catch-up) 실행됩니다.
 
 > 전제: 자동 발행도 티스토리 로그인 세션을 사용하므로, **설정 탭에서 로그인**이 되어 있어야 합니다.
 > 발행은 브라우저 창을 띄우는 방식이므로 PC 가 켜져 있고 로그인 세션이 유효해야 합니다.
@@ -486,6 +542,12 @@ console.log("코드 블록도 지원");
 | `OPENAI_BASE_URL` | (없음=공식 API) | OpenAI 호환 Base URL. openai-oauth 프록시를 쓰려면 `http://127.0.0.1:10531/v1` |
 | `GEMINI_API_KEY` | (없음) | Google Gemini API 키. OpenAI 와 함께 등록 시 토큰 남은 쪽으로 자동 전환 |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | 글/키워드 생성에 쓸 Gemini 모델 |
+| `TELEGRAM_BOT_TOKEN` | (없음) | (폴백) 텔레그램 봇 토큰. **화면 입력이 우선**, 비었을 때만 사용 |
+| `TELEGRAM_CHAT_ID` | (없음) | (폴백) 알림 받을 채팅 ID. **화면 입력이 우선** |
+| `TELEGRAM_NOTIFY_MINUTES` | `360` | (폴백) 상태 점검/알림 주기(분). **화면 입력이 우선** |
+| `APP_CONFIG_FILE` | `server/data/app-config.json` | 화면 입력 설정을 저장하는 파일 경로. 영속 볼륨 경로로 바꾸면 재배포 후에도 유지 |
+
+> 텔레그램·자동발행·블로그 이름 등 **화면에서 입력한 설정은 `app-config.json` 파일에 저장**되며, 서버 시작 시 이 파일을 읽어 복원합니다(환경변수보다 우선). 자세한 내용은 [설정 영속화](#설정-영속화-화면-입력-설정-파일-저장) 참고.
 
 ---
 
@@ -511,6 +573,10 @@ console.log("코드 블록도 지원");
 | PUT | `/api/settings` | 블로그 이름 저장 |
 | POST | `/api/settings/login` | 대화형 로그인 (브라우저 열림, 완료까지 대기) |
 | POST | `/api/settings/check-session` | 저장된 세션 유효성 확인 |
+| GET | `/api/settings/session/export` | 로그인 세션(state.json) 다운로드 |
+| POST | `/api/settings/session/import` | 내보낸 세션 JSON 업로드·적용 (클라우드 배포용) |
+
+> 로그인/세션 확인/세션 가져오기가 성공하면, 실패 상태로 남아 있던 글을 백그라운드에서 순차 재발행합니다.
 
 ### 스케줄러 (Scheduler)
 | 메서드 | 경로 | 설명 |
@@ -525,13 +591,21 @@ console.log("코드 블록도 지원");
 | GET | `/api/autopilot` | 설정 + 이번 달 키워드 계획 + 스케줄러 상태 |
 | PUT | `/api/autopilot` | 설정 변경 (주제/시각/개수/모델/API 키 등) |
 | POST | `/api/autopilot/keywords` | 이번 달 키워드 강제 재생성 |
-| POST | `/api/autopilot/run` | 지금 즉시 1회 실행 (글 생성 + 발행) |
+| POST | `/api/autopilot/run` | AI 로 새 글 생성 + 발행 (1회) |
+| POST | `/api/autopilot/run-existing` | **AI 호출 없이** 이미 만든 미발행 글 `postsPerDay` 개 발행 |
 
 ### AI 상태 (OpenAI / Gemini)
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
 | GET | `/api/ai` | 제공자별 상태(설정 여부/사용 가능/누적 사용 토큰/요청 수) |
 | POST | `/api/ai/check` | 각 제공자에 가벼운 핑을 보내 사용 가능 여부 갱신 |
+
+### 모니터링 (텔레그램)
+| 메서드 | 경로 | 설명 |
+| --- | --- | --- |
+| GET | `/api/monitor` | 텔레그램 알림 상태(설정 여부/채팅 ID/토큰 보유/폴백 여부 + 종류별 on·주기) |
+| PUT | `/api/monitor` | 텔레그램 설정 저장(토큰/채팅 ID + 종류별 on·주기) 후 모니터 재시작 |
+| POST | `/api/monitor/test` | 현재 상태를 즉시 점검해 텔레그램으로 테스트 전송 |
 
 ### 기타
 | 메서드 | 경로 | 설명 |
@@ -546,10 +620,38 @@ console.log("코드 블록도 지원");
 
 | 경로 | 내용 |
 | --- | --- |
-| `server/data/db.json` | 글 메타데이터 + 설정 + 자동발행 설정/키워드 계획 (lowdb) |
+| `server/data/db.json` | 글 메타데이터 + 키워드 계획 + AI 사용량 등 운영 데이터 (lowdb) |
+| `server/data/app-config.json` | **화면에서 입력한 설정**(블로그 이름 + 자동발행 + 텔레그램). **API 키·봇 토큰 포함 → git 제외**. 클라우드에서는 볼륨 또는 배포 후 화면에서 재설정 |
 | `server/data/posts/*.md` | 글 마크다운 원본 |
 | `server/.session/state.json` | 로그인 세션 스냅샷(storageState, 세션 쿠키 포함) |
 | `server/screenshots/` | 발행 실패 시 디버깅 스크린샷 |
+
+---
+
+## 설정 영속화 (화면 입력 설정 파일 저장)
+
+대시보드 화면에서 입력한 **설정**은 운영 데이터(`db.json`)와 분리된 **전용 파일 `app-config.json`** 에 저장됩니다. 덕분에 프로그램을 수정/재배포해도 이 파일만 있으면 설정이 그대로 복원됩니다.
+
+### 저장되는 항목
+
+- **블로그 이름** (설정 탭)
+- **자동 발행 설정** — 주제/타깃/시각/개수/공개범위, OpenAI·Gemini 모델·API 키·Base URL (자동 발행 탭)
+- **텔레그램 설정** — 봇 토큰/채팅 ID/알림 주기 (설정 탭)
+
+> 로그인 세션은 별도로 `server/.session/state.json` 에 저장됩니다. 발행한 글 본문/메타데이터·키워드 계획·AI 사용량은 `db.json` 에 남습니다.
+
+### 동작 방식
+
+1. **저장**: 위 항목을 화면에서 저장할 때마다 `app-config.json` 에 즉시(원자적 쓰기로) 기록합니다.
+2. **복원**: 서버 시작 시 `app-config.json` 이 있으면 그 값으로 설정을 덮어써 복원합니다(**설정 파일이 환경변수보다 우선**). 파일이 없으면 현재 설정으로 새로 만듭니다.
+
+### 경로 / 재배포 시 유지
+
+- 기본 경로: `server/data/app-config.json`
+- 환경변수 `APP_CONFIG_FILE` 로 경로 변경 가능 → **영속 볼륨 경로**를 지정하면 클라우드 재배포 후에도 유지됩니다.
+- cloudtype 등에서는 `/app/server/data` 볼륨을 연결하면 이 파일이 그대로 보존됩니다. ([클라우드 배포](#클라우드-배포-cloudtype-등-24시간-자동-발행) 참고)
+
+> ⚠️ 이 파일에는 API 키·봇 토큰 등 **민감 정보**가 포함됩니다. **`.gitignore` 로 git 에 올리지 않습니다.** (GitHub Push Protection) 클라우드에서는 `/app/server/data` **영속 볼륨**에 두거나, API 키는 **환경변수**로 주입하세요.
 
 ---
 
@@ -585,6 +687,79 @@ console.log("코드 블록도 지원");
 ## 작업 기록 (변경 이력)
 
 > 이 프로젝트에 적용한 모든 작업/변경 사항을 시간순으로 기록합니다. (최신 항목이 위)
+
+### 2026-06-23 — 텔레그램 알림 종류별 스위치/주기 + 글감·설정 배포 포함
+
+**목표**
+- ① 텔레그램 알림을 종류별로 전송 on/off 스위치로 선택, ② 알림 주기를 종류별로 다르게 설정, ③ 만들어진 글감 파일과 설정 파일을 배포에 함께 포함.
+
+**① 종류별 스위치 + 개별 주기**
+- `types.ts`: `TelegramChannel{enabled, intervalMinutes}` 신설. `TelegramConfig` 를 `heartbeat`/`loginAlert`/`failureAlert` 3채널 구조로 변경(단일 `intervalMinutes` 제거).
+- `db.ts`: 구버전(평면 `intervalMinutes`) → `heartbeat.intervalMinutes` 로 이전하는 마이그레이션 추가.
+- `notifier.ts`: 채널별 단일 타이머 → **1분 마스터 틱**으로 전환. 채널별 마지막 전송 시각을 추적해 주기 도래 시에만 전송. 세션 점검은 한 틱당 1회만 수행. `monitorStatus` 가 채널별 on/주기를 반환.
+- `routes/monitor.ts`: `PUT /api/monitor` 가 토큰/채팅 ID + 채널별 `enabled`/`intervalMinutes` 를 받도록 확장.
+- 프론트(`api.ts`, `SettingsPage.tsx`): 설정 탭에 종류별 **토글 스위치 + 주기(분) 입력** 3행 추가(`Toggle` 컴포넌트).
+
+**③ 글감 배포 포함 (설정 파일은 git 제외)**
+- `.gitignore`/`.dockerignore`: `server/data/posts/`(글감), `server/data/db.json`(글 메타)은 배포에 **포함**. `app-config.json`은 API 키·봇 토큰 포함으로 **git/이미지에서 제외**(GitHub Push Protection 대응).
+- README: 배포 가이드에 env 주입·볼륨으로 설정 유지 안내.
+
+**효과**: 종류마다 보낼지/얼마나 자주 보낼지 따로 정할 수 있고, 글감은 배포에 포함되며 API 키는 git 에 노출되지 않음.
+
+### 2026-06-23 — 화면 입력 설정의 파일 영속화(app-config.json)
+
+**목표**
+- 화면에서 입력한 설정을 전용 파일에 기록하고, 프로그램 수정·재배포 후에도 파일을 읽어 설정을 유지.
+
+**변경**
+- `config.ts`: `paths.appConfig` 추가(기본 `server/data/app-config.json`, 환경변수 `APP_CONFIG_FILE` 로 변경 가능).
+- `config.store.ts` 신규: 화면 입력 설정(블로그 이름 + 자동발행 설정 + 텔레그램 설정)만 `app-config.json` 에 영속화.
+  - `savePersistedConfig()`: 원자적 쓰기(temp→rename)로 저장.
+  - `initPersistedConfig()`: 서버 시작 시 파일이 있으면 그 값으로 DB 설정을 복원(**파일이 환경변수보다 우선**), 없으면 새로 생성. `initDb()` 직후 `index.ts` 에서 호출.
+- 설정 변경 라우트에 저장 연결: `routes/settings.ts`(블로그 이름), `routes/autopilot.ts`(자동발행), `routes/monitor.ts`(텔레그램) — 각 저장 후 `savePersistedConfig()` 호출.
+- README: 데이터 저장 위치/환경변수/폴더 구조/클라우드 볼륨 안내에 반영하고, "설정 영속화" 섹션 신설.
+
+**효과**: `db.json`(운영 데이터)과 분리된 `app-config.json`(설정)만 영속 볼륨에 두면, 재배포 후에도 자동발행·텔레그램·블로그 이름 설정이 그대로 복원됨.
+
+**검증**: 서버 타입체크 통과, 웹 빌드 통과, 린트 오류 없음.
+
+### 2026-06-23 — 텔레그램 설정을 화면 입력 방식으로 전환
+
+**목표**
+- `.env` 가 아니라 대시보드 화면에서 텔레그램 봇 토큰/채팅 ID/알림 주기를 입력·저장하도록 변경. (env 는 폴백으로만 유지)
+
+**변경**
+- `types.ts`: `TelegramConfig`(botToken/chatId/intervalMinutes) + `DEFAULT_TELEGRAM` 추가, `DbSchema`/`DEFAULT_DB` 에 `telegram` 포함.
+- `db.ts`: 기존 DB 에 `telegram` 기본값 보정(마이그레이션).
+- `notifier.ts`: `effectiveTelegram()` 으로 **DB(화면) 값 우선, 비면 env 폴백**. `startMonitor(startup?)`/`restartMonitor()` 추가(설정 저장 시 무중단 재시작). `monitorStatus()` 에 `hasToken`/`chatId`/`fromEnv` 추가(토큰 값은 비노출).
+- `routes/monitor.ts`: `PUT /api/monitor` 추가 — 토큰(빈 값=유지, `-`=삭제)/채팅 ID/주기 저장 후 모니터 재시작.
+- 프론트(`api.ts`, `SettingsPage.tsx`): 설정 탭의 텔레그램 패널에 **봇 토큰(비밀)·채팅 ID·알림 주기 입력 + "텔레그램 설정 저장"** 추가. env 로만 설정된 경우 안내 배지 표시.
+- `.env(.example)`: 텔레그램 항목을 "선택·폴백(화면 입력 우선)" 으로 주석 변경.
+
+**검증**: 서버 타입체크 통과, 웹 빌드 통과, 린트 오류 없음.
+
+### 2026-06-23 — 실패 글 자동 재발행 + 텔레그램 모니터링 + 즉시 발행(기존 글)
+
+**목표**
+- ① 발행 실패 글을 재로그인/서버 재시작 시 순차 재발행, ② 일정 주기로 로그인·서버 상태를 텔레그램 알림, ③ "지금 즉시 발행"은 AI 재호출 없이 이미 만든 글을 발행, ④ 작업 내역을 README 에 기록.
+
+**① 실패 글 자동 재발행** (`server/src/publisher.service.ts`, `index.ts`, `routes/settings.ts`)
+- `retryFailedPosts({ includeStuck, reason })` 추가: 상태가 `failed`(옵션으로 멈춘 `publishing` 포함)인 글을 `updatedAt` 오래된 순으로 모아 `publishPostById` 로 순차 재발행. 모듈 변수 `retrying` 으로 중복 실행 방지. 세션 만료가 감지되면 즉시 중단.
+- 트리거: **서버 시작 시**(`bootstrapRetry` — `checkSession` 으로 로그인 갱신 후 `includeStuck:true` 로 재발행), **재로그인/세션 확인/세션 가져오기 성공 시**(백그라운드 `void` 호출), **정기 점검 시**(아래 모니터).
+
+**② 텔레그램 상태 알림** (`server/src/notifier.ts`, `routes/monitor.ts`, `config.ts`, `.env`)
+- `setInterval` 기반 모니터(`startMonitor`): `TELEGRAM_NOTIFY_MINUTES`(기본 360분)마다 `collectHealth` 로 로그인 여부(`checkSession`)·서버 상태·글 통계(예약/실패/완료)를 점검해 텔레그램(`sendTelegram`)으로 보고. 서버 시작 시 시작 메시지 전송.
+- 로그인 상태가 true→false 로 바뀌면 즉시 경고. 점검 중 로그인 상태이고 실패 글이 있으면 `retryFailedPosts` 자동 호출.
+- 환경변수 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_NOTIFY_MINUTES`. 미설정 시 조용히 비활성화.
+- API: `GET /api/monitor`(상태), `POST /api/monitor/test`(테스트 전송). 설정 탭에 "텔레그램 상태 알림" 패널 + 테스트 버튼 추가.
+
+**③ 즉시 발행(기존 글)** (`server/src/autopilot.ts`, `routes/autopilot.ts`, 프론트)
+- `publishExistingNow()` 추가: AI 호출 없이 미발행 글(`draft`/`scheduled`/`failed`) 중 `createdAt` 오래된 순으로 `postsPerDay` 개를 발행. `POST /api/autopilot/run-existing`.
+- 자동 발행 탭 상단 **"지금 즉시 발행"** 버튼을 이 동작으로 연결. 기존 AI 생성 버튼은 **"AI 생성 후 1회 실행"** 으로 라벨 변경(`/api/autopilot/run` 유지).
+
+**④ README**: 위 기능을 구현 기능/폴더 구조/환경변수/REST API/사용법/변경 이력에 모두 반영.
+
+**검증**: 서버 타입체크 통과, 웹 빌드 통과, 린트 오류 없음.
 
 ### 2026-06-23 — 자동 발행 시각 누락 수정 + 즉시 발행 버튼 + 클라우드 배포 지원
 

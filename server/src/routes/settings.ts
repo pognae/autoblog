@@ -4,6 +4,8 @@ import { z } from "zod";
 import { config } from "../config.js";
 import { db } from "../db.js";
 import { checkSession, loginInteractive } from "../tistory.js";
+import { retryFailedPosts } from "../publisher.service.js";
+import { savePersistedConfig } from "../config.store.js";
 
 export const settingsRouter = Router();
 
@@ -24,6 +26,7 @@ settingsRouter.put("/", async (req, res) => {
     db.data.settings.blogName = parsed.data.blogName;
   }
   await db.write();
+  savePersistedConfig();
   res.json(db.data.settings);
 });
 
@@ -42,6 +45,10 @@ settingsRouter.post("/login", async (_req, res) => {
   db.data.settings.loggedIn = result.success;
   db.data.settings.lastLoginCheckAt = new Date().toISOString();
   await db.write();
+  // 재로그인 성공 시, 그동안 실패한 글들을 백그라운드에서 순차 재발행
+  if (result.success) {
+    void retryFailedPosts({ reason: "재로그인" });
+  }
   res.json({ ...db.data.settings, success: result.success });
 });
 
@@ -55,6 +62,7 @@ settingsRouter.post("/check-session", async (_req, res) => {
   db.data.settings.loggedIn = ok;
   db.data.settings.lastLoginCheckAt = new Date().toISOString();
   await db.write();
+  if (ok) void retryFailedPosts({ reason: "세션 확인" });
   res.json(db.data.settings);
 });
 
@@ -106,5 +114,6 @@ settingsRouter.post("/session/import", async (req, res) => {
   db.data.settings.loggedIn = ok;
   db.data.settings.lastLoginCheckAt = new Date().toISOString();
   await db.write();
+  if (ok) void retryFailedPosts({ reason: "세션 가져오기" });
   res.json({ ...db.data.settings, imported: true });
 });
