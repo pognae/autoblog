@@ -14,6 +14,8 @@ export interface Post {
   tags: string[];
   /** 티스토리 카테고리 ID (선택). 비우면 '분류 없음' */
   categoryId?: string;
+  /** 티스토리 카테고리명 (선택). 발행 시 에디터 드롭다운에서 이름으로 매칭 */
+  categoryName?: string;
   /** 공개 범위: public(공개) / protected(보호) / private(비공개) */
   visibility: "public" | "protected" | "private";
   /** 예약 발행 시각 (ISO 문자열). 없으면 초안 */
@@ -93,6 +95,8 @@ export interface AutopilotConfig {
   minute: number;
   /** 자동 발행 글의 공개 범위 */
   visibility: Post["visibility"];
+  /** 글 생성 시 AI가 선택할 카테고리 목록 (선택). 비우면 기본값 사용 */
+  categories?: string[];
   /** 제공자별 설정 */
   openai: AiProviderConfig;
   gemini: AiProviderConfig;

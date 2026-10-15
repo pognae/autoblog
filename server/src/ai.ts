@@ -373,6 +373,7 @@ export interface GeneratedArticle {
   title: string;
   markdown: string;
   tags: string[];
+  category: string;
 }
 
 /** 키워드 기반으로 블로그 글(제목/본문/태그)을 생성한다. */
@@ -386,19 +387,25 @@ export async function generateArticle(
     "표절 없이 독창적으로 작성하고, 과장·허위 정보는 피합니다.",
   ].join(" ");
 
+  const categories =
+    cfg.categories && cfg.categories.length > 0
+      ? cfg.categories
+      : ["AI 활용법", "Development", "Daily"];
   const user = [
     `핵심 키워드: "${input.keyword}"`,
     cfg.topic ? `블로그 주제: ${cfg.topic}` : "",
     cfg.audience ? `타깃 독자: ${cfg.audience}` : "",
     "",
     "위 키워드로 SEO 에 최적화된 한국어 블로그 글을 작성하세요. 요구사항:",
-    "- 제목(title): 클릭을 유도하는 매력적인 제목 (키워드 포함, 35자 내외)",
+    "- 제목(title): 키워드를 포함한 구체적인 제목 (35자 내외).",
+    "  '완벽 분석', '총정리', '완벽 가이드', '알아보기', '파헤치기' 같은 낚시성·상투적 표현은 쓰지 마.",
     "- 본문(markdown): 마크다운 형식. 도입부 + ## 소제목 여러 개 + 결론 구조.",
     "  1500자 이상, 키워드를 자연스럽게 반복, 목록/표 등 가독성 요소 활용.",
     "  맨 앞에 글 제목(#)은 넣지 말 것(제목은 title 로만 제공).",
     "- 태그(tags): 5~8개의 관련 한국어 태그 배열.",
+    `- 카테고리(category): 다음 중 글 주제와 가장 맞는 하나를 그대로 선택: ${categories.join(", ")}`,
     "",
-    '반드시 다음 JSON 형식으로만 답하세요: {"title":"...","markdown":"...","tags":["...","..."]}',
+    '반드시 다음 JSON 형식으로만 답하세요: {"title":"...","markdown":"...","tags":["...","..."],"category":"..."}',
   ]
     .filter(Boolean)
     .join("\n");
@@ -408,6 +415,7 @@ export async function generateArticle(
     title?: string;
     markdown?: string;
     tags?: unknown;
+    category?: unknown;
   }>(text);
 
   const title = String(parsed.title ?? "").trim();
@@ -415,7 +423,9 @@ export async function generateArticle(
   const tags = Array.isArray(parsed.tags)
     ? parsed.tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 10)
     : [];
+  const rawCategory = String(parsed.category ?? "").trim();
+  const category = categories.includes(rawCategory) ? rawCategory : categories[0];
 
   if (!title || !markdown) throw new Error("글 생성 결과가 비어 있습니다.");
-  return { title, markdown, tags };
+  return { title, markdown, tags, category };
 }

@@ -13,6 +13,8 @@ export interface CreatePostInput {
   title?: string;
   tags?: string[];
   categoryId?: string;
+  /** 카테고리명 (발행 시 에디터에서 이름으로 매칭) */
+  categoryName?: string;
   visibility?: Post["visibility"];
   scheduledAt?: string;
 }
@@ -62,6 +64,7 @@ export async function createPost(input: CreatePostInput): Promise<Post> {
     fileName,
     tags: input.tags ?? parsed.tags ?? [],
     categoryId: input.categoryId,
+    categoryName: input.categoryName,
     visibility: input.visibility ?? "public",
     scheduledAt: input.scheduledAt,
     status: input.scheduledAt ? "scheduled" : "draft",
@@ -79,6 +82,7 @@ export interface UpdatePostInput {
   markdown?: string;
   tags?: string[];
   categoryId?: string | null;
+  categoryName?: string | null;
   visibility?: Post["visibility"];
   /** null 을 주면 예약 해제(초안으로) */
   scheduledAt?: string | null;
@@ -102,6 +106,8 @@ export async function updatePost(
   if (input.tags) post.tags = input.tags;
   if (input.categoryId !== undefined)
     post.categoryId = input.categoryId ?? undefined;
+  if (input.categoryName !== undefined)
+    post.categoryName = input.categoryName ?? undefined;
   if (input.visibility) post.visibility = input.visibility;
 
   if (input.scheduledAt !== undefined) {

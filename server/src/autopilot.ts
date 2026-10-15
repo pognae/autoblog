@@ -106,16 +106,27 @@ export async function runDaily(cfg: AutopilotConfig): Promise<string> {
     return "사용 가능한 키워드가 없습니다.";
   }
 
+  const existingTitles = new Set(
+    db.data.posts.map((post) => post.title.trim().toLowerCase()),
+  );
   const results: string[] = [];
   for (const item of picks) {
     try {
       console.log(`[autopilot] 글 생성: "${item.keyword}"`);
       const article = await generateArticle(cfg, { keyword: item.keyword });
 
+      // 제목 중복 방지: 이미 발행/예약된 글과 같은 제목이면 건너뜀
+      if (existingTitles.has(article.title.trim().toLowerCase())) {
+        results.push(`⚠️ ${item.keyword} → 제목 중복으로 건너뜀`);
+        continue;
+      }
+      existingTitles.add(article.title.trim().toLowerCase());
+
       const post = await createPost({
         markdown: article.markdown,
         title: article.title,
         tags: article.tags,
+        categoryName: article.category,
         visibility: cfg.visibility,
       });
 

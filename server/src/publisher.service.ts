@@ -53,6 +53,7 @@ export async function publishPostById(id: string): Promise<PublishOutcome> {
         html,
         tags: post.tags,
         categoryId: post.categoryId,
+        categoryName: post.categoryName,
         visibility: post.visibility,
       });
       await setPostStatus(id, "published", { publishedUrl: result.url });

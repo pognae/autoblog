@@ -40,6 +40,9 @@ const SELECTORS = {
   markdownEditor: ".CodeMirror, .cm-content, textarea#markdown-source",
   // 태그 입력
   tagInput: '#tagText, input[name="tag"], input[placeholder*="태그"]',
+  // 카테고리 선택 (네이티브 select 또는 커스텀 드롭다운)
+  categoryButton: '#category-btn',
+  categoryOptions: '#category-list [role="option"]',
   // 발행 레이어 열기
   publishLayerOpen: '#publish-layer-btn, button:has-text("발행")',
   // 공개/비공개 라디오
@@ -59,6 +62,8 @@ export interface PublishInput {
   html: string;
   tags: string[];
   categoryId?: string;
+  /** 카테고리명. 에디터의 카테고리 드롭다운에서 이름으로 매칭해 선택 */
+  categoryName?: string;
   visibility: "public" | "protected" | "private";
 }
 
@@ -264,6 +269,11 @@ export async function publishPost(input: PublishInput): Promise<PublishResult> {
       await fillTags(page, input.tags);
     }
 
+    // 카테고리 (실패해도 발행은 계속 — 경고만 남김)
+    if (input.categoryName) {
+      await fillCategory(page, input.categoryName);
+    }
+
     // 발행
     console.log("[publish] 발행 진행...");
     const url = await publish(page, input.visibility);
@@ -370,6 +380,47 @@ async function fillEditorContent(page: Page, html: string): Promise<void> {
   throw new Error(
     "본문 에디터를 찾지 못했습니다. 티스토리 에디터 구조가 변경되었을 수 있습니다.",
   );
+}
+
+/**
+ * 카테고리 설정: 에디터의 카테고리 드롭다운(#category-btn)에서
+ * aria-label이 카테고리명과 일치하는 옵션을 선택한다.
+ * 못 찾으면 경고만 남기고 계속 (발행 차단하지 않음)
+ */
+async function fillCategory(page: Page, categoryName: string): Promise<void> {
+  const name = categoryName.trim();
+  if (!name) return;
+  try {
+    const btn = page.locator(SELECTORS.categoryButton).first();
+    if (!(await btn.isVisible({ timeout: 5000 }).catch(() => false))) {
+      console.warn("[publish] 카테고리 버튼을 찾지 못함");
+      return;
+    }
+    await btn.click();
+    await page.waitForTimeout(800);
+    const exact = page
+      .locator(`${SELECTORS.categoryOptions}[aria-label="${name}"]`)
+      .first();
+    if (await exact.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await exact.click();
+      console.log(`[publish] 카테고리 선택: "${name}"`);
+      return;
+    }
+    const partial = page
+      .locator(`${SELECTORS.categoryOptions}:has-text("${name}")`)
+      .first();
+    if (await partial.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await partial.click();
+      console.log(`[publish] 카테고리 선택(부분매칭): "${name}"`);
+      return;
+    }
+    console.warn(`[publish] 카테고리 "${name}"를 목록에서 찾지 못함`);
+    await page.keyboard.press("Escape");
+  } catch (err) {
+    console.warn(
+      `[publish] 카테고리 설정 실패(발행은 계속): ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
 }
 
 async function fillTags(page: Page, tags: string[]): Promise<void> {
